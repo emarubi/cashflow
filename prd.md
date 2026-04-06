@@ -1,119 +1,119 @@
 # PRD — Cashflow
 
-## 1. Vue d'ensemble
+## 1. Overview
 
-**Cashflow** est une application web multi-tenant de gestion des relances de factures impayées. Elle permet aux équipes financières de piloter leur recouvrement via des workflows automatisés, de suivre les paiements et les transactions bancaires, et d'analyser leur performance en temps réel.
+**Cashflow** is a multi-tenant web application for managing unpaid invoice dunning. It enables finance teams to drive their collections through automated workflows, track payments and bank transactions, and analyze their performance in real time.
 
-Ce projet est un clone fonctionnel d'Upflow, construit avec la stack suivante :
-- **Backend :** Node.js, Express, TypeScript, Apollo Server (GraphQL), PostgreSQL, Redis, BullMQ
-- **Frontend :** React, TypeScript, Apollo Client, React Context, Tailwind CSS
-- **Infra locale :** Docker Compose
-
----
-
-## 2. Objectifs
-
-- Reproduire fidèlement les fonctionnalités principales visibles dans la démo Upflow
-- Implémenter une architecture multi-tenant réaliste avec isolation des données par compagnie
-- Démontrer la maîtrise de la stack technique complète (fullstack TypeScript, GraphQL, queues, auth)
-- Servir de support de préparation à un entretien technique Senior Fullstack Engineer
+This project is a functional clone of Upflow, built with the following stack:
+- **Backend:** Node.js, Express, TypeScript, Apollo Server (GraphQL), PostgreSQL, Redis, BullMQ
+- **Frontend:** React, TypeScript, Apollo Client, React Context, Tailwind CSS
+- **Local Infra:** Docker Compose
 
 ---
 
-## 3. Utilisateurs cibles
+## 2. Goals
 
-| Rôle | Description |
+- Faithfully reproduce the main features visible in the Upflow demo
+- Implement a realistic multi-tenant architecture with data isolation per company
+- Demonstrate mastery of the full tech stack (fullstack TypeScript, GraphQL, queues, auth)
+- Serve as preparation material for a Senior Fullstack Engineer technical interview
+
+---
+
+## 3. Target Users
+
+| Role | Description |
 |---|---|
-| **Admin compagnie** | Configure les workflows, gère les utilisateurs |
-| **Utilisateur finance** | Traite les relances, consulte le dashboard, suit les paiements |
+| **Company admin** | Configures workflows, manages users |
+| **Finance user** | Handles dunning, views dashboard, tracks payments |
 
-Chaque compagnie est un tenant isolé. Un utilisateur appartient à une seule compagnie.
+Each company is an isolated tenant. A user belongs to a single company.
 
 ---
 
-## 4. Fonctionnalités
+## 4. Features
 
-### 4.1 Authentification
-- Login par compagnie (slug ou domaine) + email + mot de passe
-- Token JWT avec refresh token
-- Sessions isolées par tenant
-- Déconnexion
+### 4.1 Authentication
+- Login by company (slug or domain) + email + password
+- JWT token with refresh token
+- Tenant-isolated sessions
+- Logout
 
 ### 4.2 Dashboard
-- KPIs : montant total impayé, montant dû, montant en retard, montant non appliqué
-- DSO (Days Sales Outstanding) avec évolution mensuelle (graphique barres)
-- Taux de risque avec évolution mensuelle (graphique barres)
-- Nombre d'actions à faire
-- Top débiteurs par montant impayé
-- Aging balance (répartition des impayés par ancienneté)
-- Clients avec moyen de paiement enregistré
+- KPIs: total unpaid amount, amount due, overdue amount, unapplied amount
+- DSO (Days Sales Outstanding) with monthly trend (bar chart)
+- Risk rate with monthly trend (bar chart)
+- Number of actions to do
+- Top debtors by unpaid amount
+- Aging balance (breakdown of unpaid amounts by age)
+- Customers with a registered payment method
 
 ### 4.3 Workflows
-- Liste des workflows avec métriques (clients assignés, actions effectuées, taux ouverture email, montant en cours, DSO)
-- Création / édition d'un workflow
-- Configuration : délai minimum entre contacts, adresse de réponse, logique première action
-- Séquence d'actions : canal (email / appel / lettre), délai (avant/après échéance), template, expéditeur
-- Assignation d'un workflow à un client
+- Workflow list with metrics (assigned customers, completed actions, email open rate, outstanding amount, DSO)
+- Create / edit a workflow
+- Configuration: minimum delay between contacts, reply address, first action logic
+- Action sequence: channel (email / call / letter), delay (before/after due date), template, sender
+- Assign a workflow to a customer
 
-### 4.4 Clients (Debtors)
-- Liste paginée avec filtres et recherche
-- Colonnes : nom, note de risque (A/B/C/D), utilisateur assigné, workflow, montant impayé, moyen de paiement
-- Vue détail client : historique des actions, factures, notes
+### 4.4 Customers (Debtors)
+- Paginated list with filters and search
+- Columns: name, risk rating (A/B/C/D), assigned user, workflow, unpaid amount, payment method
+- Customer detail view: action history, invoices, notes
 
-### 4.5 Factures
-- Liste paginée avec filtres (statut : due, overdue, in dispute) et recherche
-- Colonnes : numéro, client, statut, date d'émission, date d'échéance, montant impayé, montant total
-- Onglets : Factures / Notes de crédit
-- Indicateur factures non envoyées
+### 4.5 Invoices
+- Paginated list with filters (status: due, overdue, in dispute) and search
+- Columns: number, customer, status, issue date, due date, unpaid amount, total amount
+- Tabs: Invoices / Credit Notes
+- Unsent invoices indicator
 
 ### 4.6 Actions (To Do)
-- Vue "To Do" et vue "All"
-- Liste des relances en attente avec filtres (reminders, replies, billings)
-- Détail d'une action : email pré-rempli avec template, expéditeur, destinataire
-- Actions possibles : Envoyer / Mettre en pause / Ignorer
-- Fonction IA : résumé du contexte client (simulé)
+- "To Do" view and "All" view
+- List of pending dunning actions with filters (reminders, replies, billings)
+- Action detail: pre-filled email with template, sender, recipient
+- Possible actions: Send / Pause / Ignore
+- AI feature: customer context summary (simulated)
 
 ### 4.7 Emails
-- Historique des emails envoyés par client et par facture
-- Statut : envoyé, ouvert, en erreur
+- History of emails sent per customer and per invoice
+- Status: sent, opened, error
 
-### 4.8 Paiements
-- Liste paginée des paiements avec filtres
-- Colonnes : référence, date, source, statut, type, méthode, client, facture associée, montant
+### 4.8 Payments
+- Paginated list of payments with filters
+- Columns: reference, date, source, status, type, method, customer, associated invoice, amount
 
-### 4.9 Transactions bancaires
-- Liste des transactions avec statut (applied / unapplied)
-- Suggestions automatiques de rapprochement avec les factures
-- Action : appliquer manuellement une transaction à une facture
+### 4.9 Bank Transactions
+- Transaction list with status (applied / unapplied)
+- Automatic reconciliation suggestions with invoices
+- Action: manually apply a transaction to an invoice
 
 ---
 
-## 5. Modèle de données (PostgreSQL)
+## 5. Data Model (PostgreSQL)
 
-### Tables principales
+### Main Tables
 
 ```sql
 companies         -- tenants
-users             -- utilisateurs par compagnie
-debtors           -- clients débiteurs
-invoices          -- factures (status: draft/due/overdue/paid/in_dispute)
-workflows         -- templates de workflow par compagnie
-actions           -- étapes d'un workflow (channel, delay, template)
-executions        -- état d'exécution d'un workflow pour une facture
-action_events     -- historique immuable des actions effectuées
-payments          -- paiements reçus
-bank_transactions -- transactions bancaires importées
-email_templates   -- templates d'emails par compagnie
+users             -- users per company
+debtors           -- debtor customers
+invoices          -- invoices (status: draft/due/overdue/paid/in_dispute)
+workflows         -- workflow templates per company
+actions           -- workflow steps (channel, delay, template)
+executions        -- workflow execution state per invoice
+action_events     -- immutable history of completed actions
+payments          -- received payments
+bank_transactions -- imported bank transactions
+email_templates   -- email templates per company
 ```
 
-### Index notables
+### Notable Indexes
 ```sql
--- Partial index sur les factures impayées (performance critique)
+-- Partial index on unpaid invoices (critical performance)
 CREATE INDEX idx_invoices_unpaid
 ON invoices (due_date, company_id)
 WHERE status IN ('due', 'overdue');
 
--- Index sur next_run_at pour le scheduler
+-- Index on next_run_at for the scheduler
 CREATE INDEX idx_executions_next_run
 ON executions (next_run_at)
 WHERE status = 'active';
@@ -121,37 +121,37 @@ WHERE status = 'active';
 
 ---
 
-## 6. Architecture backend
+## 6. Backend Architecture
 
 ### GraphQL
-- Apollo Server avec Express
-- Schéma typé (SDL first)
-- Resolvers avec DataLoader pour éviter le N+1
-- Authentification via middleware (context JWT)
-- Queries : invoices, debtors, workflows, payments, bankTransactions, dashboard
-- Mutations : sendAction, pauseExecution, createWorkflow, updateWorkflow, applyBankTransaction
+- Apollo Server with Express
+- Typed schema (SDL first)
+- Resolvers with DataLoader to avoid N+1
+- Authentication via middleware (JWT context)
+- Queries: invoices, debtors, workflows, payments, bankTransactions, dashboard
+- Mutations: sendAction, pauseExecution, createWorkflow, updateWorkflow, applyBankTransaction
 
 ### Queue (BullMQ + Redis)
-- Queue `dunning` : traitement des relances programmées
-- Worker : vérifie idempotency → simule envoi email → log console + insert `action_events`
-- Scheduler : poll toutes les minutes sur `executions.next_run_at`
-- Dead-letter queue : alertes sur échecs répétés
+- `dunning` queue: processing of scheduled dunning actions
+- Worker: checks idempotency → simulates email sending → console log + `action_events` insert
+- Scheduler: polls every minute on `executions.next_run_at`
+- Dead-letter queue: alerts on repeated failures
 
 ### Cache (Redis)
-- Cache des queries GraphQL fréquentes (dashboard KPIs, TTL 5 min)
-- Sessions JWT (refresh tokens)
-- Idempotency keys des jobs BullMQ
+- Cache for frequent GraphQL queries (dashboard KPIs, TTL 5 min)
+- JWT sessions (refresh tokens)
+- Idempotency keys for BullMQ jobs
 
 ### Auth
-- JWT access token (15 min) + refresh token (7 jours) stocké Redis
-- Middleware Express qui injecte `{ companyId, userId }` dans le context GraphQL
-- Isolation tenant : toutes les queries filtrent sur `company_id`
+- JWT access token (15 min) + refresh token (7 days) stored in Redis
+- Express middleware that injects `{ companyId, userId }` into GraphQL context
+- Tenant isolation: all queries filter on `company_id`
 
 ---
 
-## 7. Architecture frontend
+## 7. Frontend Architecture
 
-### Structure des pages
+### Page Structure
 ```
 /login                    → LoginPage
 /:companySlug/dashboard   → DashboardPage
@@ -166,51 +166,51 @@ WHERE status = 'active';
 /:companySlug/bank        → BankTransactionsPage
 ```
 
-### State management
-- **Apollo Cache** : toutes les données serveur
-- **AuthContext** : `{ company, user, token, login, logout }`
-- **UIContext** : `{ language, setLanguage, sidebarOpen, setSidebarOpen }`
-- **useState / useReducer** : état local des composants
+### State Management
+- **Apollo Cache**: all server data
+- **AuthContext**: `{ company, user, token, login, logout }`
+- **UIContext**: `{ language, setLanguage, sidebarOpen, setSidebarOpen }`
+- **useState / useReducer**: local component state
 
 ### i18n
-- Librairie : `react-i18next`
-- Langues : français (défaut) + anglais
-- Fichiers : `locales/fr.json` et `locales/en.json`
+- Library: `react-i18next`
+- Languages: French (default) + English
+- Files: `locales/fr.json` and `locales/en.json`
 
 ---
 
-## 8. Données de test (Seeds)
+## 8. Test Data (Seeds)
 
-3 compagnies avec données réalistes distinctes :
+3 companies with distinct realistic data:
 
-| Compagnie | Slug | Secteur | Volume |
+| Company | Slug | Sector | Volume |
 |---|---|---|---|
-| Open Demo Inc. | `open-demo` | SaaS B2B | ~500 clients, ~850 factures |
-| Acme Finance | `acme-finance` | Services financiers | ~200 clients, ~400 factures |
-| Nord Supply | `nord-supply` | Distribution | ~150 clients, ~300 factures |
+| Open Demo Inc. | `open-demo` | B2B SaaS | ~500 customers, ~850 invoices |
+| Acme Finance | `acme-finance` | Financial services | ~200 customers, ~400 invoices |
+| Nord Supply | `nord-supply` | Distribution | ~150 customers, ~300 invoices |
 
-Chaque compagnie a : utilisateurs, workflows configurés, factures à divers statuts, historique d'actions, paiements, transactions bancaires.
+Each company has: users, configured workflows, invoices at various statuses, action history, payments, bank transactions.
 
 ---
 
 ## 9. Tests
 
 ### Backend
-- **Jest** : unitaires sur les resolvers GraphQL, les workers BullMQ, les utilitaires
-- **Supertest** : intégration sur les endpoints Express (auth, GraphQL)
-- Coverage cible : 70%
+- **Jest**: unit tests on GraphQL resolvers, BullMQ workers, utilities
+- **Supertest**: integration tests on Express endpoints (auth, GraphQL)
+- Target coverage: 70%
 
 ### Frontend
-- **Jest + React Testing Library** : composants, hooks, contexts
-- Tests de rendu et d'interaction (filtres, pagination, formulaires)
-- Coverage cible : 60%
+- **Jest + React Testing Library**: components, hooks, contexts
+- Render and interaction tests (filters, pagination, forms)
+- Target coverage: 60%
 
 ---
 
-## 10. Hors scope
+## 10. Out of Scope
 
-- Vrai envoi d'emails (simulé par log)
-- Déploiement GCP / Terraform
-- Intégrations externes (CRM, banques, providers de paiement)
-- Fonctionnalités IA réelles (résumé simulé)
-- Mobile / responsive complet
+- Real email sending (simulated by log)
+- GCP / Terraform deployment
+- External integrations (CRM, banks, payment providers)
+- Real AI features (simulated summary)
+- Mobile / full responsive

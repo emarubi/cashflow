@@ -1,0 +1,17 @@
+{
+  "name": "cashflow",
+  "private": true,
+  "scripts": {
+    "dev:backend": "pnpm --filter @cashflow/backend dev",
+    "dev:frontend": "pnpm --filter @cashflow/frontend dev",
+    "test": "pnpm -r test",
+    "build": "pnpm -r build"
+  },
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild", "@apollo/protobufjs", "msgpackr-extract"]
+  }
+}

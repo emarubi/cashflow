@@ -1,208 +1,208 @@
 # Cashflow
 
-Application web de gestion des relances de factures impayées — clone fonctionnel d'Upflow.
+Web application for managing unpaid invoice dunning — a functional clone of Upflow.
 
 ---
 
-## Stack technique
+## Tech Stack
 
-| Couche | Technologie |
+| Layer | Technology |
 |---|---|
 | Backend | Node.js, Express, TypeScript |
 | API | Apollo Server (GraphQL) |
-| Base de données | PostgreSQL |
+| Database | PostgreSQL |
 | Cache & Queues | Redis, BullMQ |
 | Frontend | React, TypeScript, Apollo Client |
 | Styling | Tailwind CSS |
-| État global | React Context |
+| Global State | React Context |
 | i18n | react-i18next (FR + EN) |
 | Tests | Jest, Supertest, React Testing Library |
-| Infra locale | Docker Compose |
+| Local Infra | Docker Compose |
 
 ---
 
-## Prérequis
+## Prerequisites
 
 - [Node.js](https://nodejs.org/) >= 20
-- [Docker](https://www.docker.com/) et Docker Compose
-- [npm](https://www.npmjs.com/) >= 10
+- [Docker](https://www.docker.com/) and Docker Compose
+- [pnpm](https://pnpm.io/) >= 9
 
 ---
 
 ## Installation
 
 ```bash
-# Cloner le repo
+# Clone the repo
 git clone https://github.com/ton-user/cashflow.git
 cd cashflow
 
-# Installer les dépendances (tous les packages)
-npm install
+# Install dependencies (all packages)
+pnpm install
 
-# Copier les variables d'environnement
+# Copy environment variables
 cp packages/backend/.env.example packages/backend/.env
 cp packages/frontend/.env.example packages/frontend/.env
 ```
 
 ---
 
-## Démarrage
+## Getting Started
 
-### 1. Démarrer l'infrastructure (Postgres + Redis)
+### 1. Start the infrastructure (Postgres + Redis)
 
 ```bash
 docker-compose up -d
 ```
 
-Vérifie que les services sont up :
+Verify that services are running:
 ```bash
 docker-compose ps
 ```
 
-### 2. Initialiser la base de données
+### 2. Initialize the database
 
 ```bash
 cd packages/backend
 
-# Appliquer les migrations
+# Apply migrations
 npm run migrate
 
-# Peupler avec les données de test
+# Seed with test data
 npm run seed
 ```
 
-### 3. Démarrer le backend
+### 3. Start the backend
 
 ```bash
-# Depuis packages/backend
+# From packages/backend
 npm run dev
 ```
 
-L'API GraphQL est disponible sur : http://localhost:4000/graphql
-Le playground GraphQL est disponible sur : http://localhost:4000/graphql (en développement)
+The GraphQL API is available at: http://localhost:4000/graphql
+The GraphQL playground is available at: http://localhost:4000/graphql (in development)
 
-### 4. Démarrer le frontend
+### 4. Start the frontend
 
 ```bash
-# Depuis packages/frontend
+# From packages/frontend
 npm run dev
 ```
 
-L'application est disponible sur : http://localhost:5173
+The application is available at: http://localhost:5173
 
 ---
 
-## Comptes de démonstration
+## Demo Accounts
 
-Trois compagnies sont disponibles après le seed :
+Three companies are available after seeding:
 
 ### Open Demo Inc.
-| Champ | Valeur |
+| Field | Value |
 |---|---|
 | URL | http://localhost:5173/open-demo |
 | Email | john.doe@open-demo.com |
-| Mot de passe | demo1234 |
+| Password | demo1234 |
 
 ### Acme Finance
-| Champ | Valeur |
+| Field | Value |
 |---|---|
 | URL | http://localhost:5173/acme-finance |
 | Email | jane.smith@acme-finance.com |
-| Mot de passe | demo1234 |
+| Password | demo1234 |
 
 ### Nord Supply
-| Champ | Valeur |
+| Field | Value |
 |---|---|
 | URL | http://localhost:5173/nord-supply |
 | Email | marc.dupont@nord-supply.com |
-| Mot de passe | demo1234 |
+| Password | demo1234 |
 
 ---
 
-## Structure du projet
+## Project Structure
 
 ```
 cashflow/
 ├── packages/
-│   ├── backend/                  # API Node.js + GraphQL
+│   ├── backend/                  # Node.js + GraphQL API
 │   │   ├── src/
 │   │   │   ├── auth/             # JWT, middleware
 │   │   │   ├── graphql/          # schema, resolvers, dataloaders
 │   │   │   ├── db/               # migrations, seeds, pool
-│   │   │   ├── queues/           # BullMQ workers et scheduler
+│   │   │   ├── queues/           # BullMQ workers and scheduler
 │   │   │   ├── cache/            # Redis helpers
 │   │   │   └── index.ts
 │   │   └── tests/
 │   │       ├── unit/
 │   │       └── integration/
 │   │
-│   └── frontend/                 # App React
+│   └── frontend/                 # React App
 │       ├── src/
-│       │   ├── components/       # composants réutilisables
-│       │   ├── pages/            # Dashboard, Workflows, Clients...
+│       │   ├── components/       # reusable components
+│       │   ├── pages/            # Dashboard, Workflows, Customers...
 │       │   ├── contexts/         # AuthContext, UIContext
-│       │   ├── graphql/          # queries et mutations
+│       │   ├── graphql/          # queries and mutations
 │       │   ├── hooks/            # custom hooks
 │       │   └── locales/          # fr.json, en.json
 │       └── tests/
 │
 ├── docker-compose.yml
 ├── PRD.md                        # Product Requirements Document
-├── CLAUDE.md                     # Guide pour Claude Code
+├── CLAUDE.md                     # Guide for Claude Code
 └── README.md
 ```
 
 ---
 
-## Pages de l'application
+## Application Pages
 
 | Route | Description |
 |---|---|
-| `/:slug` | Page de login de la compagnie |
-| `/:slug/dashboard` | KPIs, DSO, taux de risque, aging balance |
-| `/:slug/workflows` | Liste et configuration des workflows |
-| `/:slug/workflows/:id` | Détail d'un workflow avec ses actions |
-| `/:slug/customers` | Liste des clients débiteurs |
-| `/:slug/customers/:id` | Détail d'un client |
-| `/:slug/invoices` | Liste des factures avec filtres |
-| `/:slug/actions` | Actions à traiter (To Do) |
-| `/:slug/emails` | Historique des emails envoyés |
-| `/:slug/payments` | Liste des paiements |
-| `/:slug/bank` | Transactions bancaires et rapprochement |
+| `/:slug` | Company login page |
+| `/:slug/dashboard` | KPIs, DSO, risk rate, aging balance |
+| `/:slug/workflows` | Workflow list and configuration |
+| `/:slug/workflows/:id` | Workflow detail with its actions |
+| `/:slug/customers` | Debtor customer list |
+| `/:slug/customers/:id` | Customer detail |
+| `/:slug/invoices` | Invoice list with filters |
+| `/:slug/actions` | Actions to process (To Do) |
+| `/:slug/emails` | Sent email history |
+| `/:slug/payments` | Payment list |
+| `/:slug/bank` | Bank transactions and reconciliation |
 
 ---
 
 ## Tests
 
 ```bash
-# Tous les tests (depuis la racine)
+# All tests (from root)
 npm test
 
-# Backend uniquement
+# Backend only
 cd packages/backend
-npm run test:unit          # tests unitaires
-npm run test:integration   # tests d'intégration
+npm run test:unit          # unit tests
+npm run test:integration   # integration tests
 
-# Frontend uniquement
+# Frontend only
 cd packages/frontend
 npm test
 ```
 
 ---
 
-## Architecture des queues
+## Queue Architecture
 
-Le système de relances automatiques fonctionne ainsi :
+The automated dunning system works as follows:
 
-1. **Scheduler** (toutes les 60s) : récupère les `executions` dont `next_run_at <= NOW()` et les enqueue dans BullMQ avec un jitter aléatoire de 0 à 5 minutes
-2. **Worker** : traite chaque job en vérifiant l'idempotency, la status de la facture, puis simule l'envoi (log console + insert `action_events`)
-3. **Dead-letter queue** : les jobs échoués après 5 tentatives sont loggés et l'execution est marquée `failed`
+1. **Scheduler** (every 60s): fetches `executions` where `next_run_at <= NOW()` and enqueues them in BullMQ with a random jitter of 0 to 5 minutes
+2. **Worker**: processes each job by checking idempotency, invoice status, then simulates sending (console log + `action_events` insert)
+3. **Dead-letter queue**: failed jobs after 5 attempts are logged and the execution is marked `failed`
 
-> En développement, les envois d'emails sont simulés. Les logs apparaissent dans la console du backend avec le préfixe `[DUNNING]`.
+> In development, email sending is simulated. Logs appear in the backend console with the `[DUNNING]` prefix.
 
 ---
 
-## Variables d'environnement
+## Environment Variables
 
 ### Backend (`packages/backend/.env`)
 
@@ -226,37 +226,37 @@ VITE_API_URL=http://localhost:4000/graphql
 
 ## Docker Compose
 
-Les services disponibles :
+Available services:
 
 | Service | Port | Description |
 |---|---|---|
-| `postgres` | 5432 | Base de données PostgreSQL |
-| `redis` | 6379 | Cache et queues BullMQ |
+| `postgres` | 5432 | PostgreSQL database |
+| `redis` | 6379 | Cache and BullMQ queues |
 
 ```bash
-# Démarrer
+# Start
 docker-compose up -d
 
-# Arrêter
+# Stop
 docker-compose down
 
-# Réinitialiser les données
+# Reset data
 docker-compose down -v && docker-compose up -d
 npm run migrate && npm run seed
 ```
 
 ---
 
-## Conventions de développement
+## Development Conventions
 
-- **TypeScript strict** activé sur tous les packages
-- **Isolation tenant** : toutes les queries SQL filtrent sur `company_id` extrait du JWT
-- **Pas de prop drilling** : données serveur via Apollo Cache, état global via React Context
-- **Migrations** : ne jamais modifier une migration existante, toujours en créer une nouvelle
-- **Tests** : un fichier de test par fichier source
+- **Strict TypeScript** enabled on all packages
+- **Tenant isolation**: all SQL queries filter on `company_id` extracted from JWT
+- **No prop drilling**: server data via Apollo Cache, global state via React Context
+- **Migrations**: never modify an existing migration, always create a new one
+- **Tests**: one test file per source file
 
 ---
 
-## Licence
+## License
 
 MIT
