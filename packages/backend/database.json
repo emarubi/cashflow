@@ -1,0 +1,11 @@
+{
+  "dev": {
+    "driver": "pg",
+    "url": { "ENV": "DATABASE_URL" }
+  },
+  "test": {
+    "driver": "pg",
+    "url": { "ENV": "TEST_DATABASE_URL" }
+  },
+  "sql-file": true
+}

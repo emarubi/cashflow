@@ -9,7 +9,9 @@
     "test": "jest",
     "test:unit": "jest --testPathPattern=tests/unit",
     "test:integration": "jest --testPathPattern=tests/integration",
-    "migrate": "ts-node src/db/migrate.ts",
+    "migrate:create": "db-migrate create --sql-file --migrations-dir src/db/migrations",
+    "migrate:up": "db-migrate up --migrations-dir src/db/migrations",
+    "migrate:down": "db-migrate down --migrations-dir src/db/migrations",
     "seed": "ts-node src/db/seed.ts"
   },
   "dependencies": {
@@ -24,6 +26,8 @@
     "pg": "^8.11.3"
   },
   "devDependencies": {
+    "db-migrate": "^0.11.14",
+    "db-migrate-pg": "^1.3.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/express": "^4.17.21",
     "@types/jest": "^29.5.11",
