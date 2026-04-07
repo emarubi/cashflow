@@ -1,0 +1,404 @@
+scalar DateTime
+scalar Date
+scalar JSON
+
+enum InvoiceStatus {
+  draft
+  due
+  overdue
+  paid
+  in_dispute
+}
+
+enum ExecutionStatus {
+  active
+  paused
+  completed
+  failed
+}
+
+enum ActionChannel {
+  email
+  call
+  letter
+}
+
+enum ActionTrigger {
+  before_due
+  after_due
+  on_issue
+}
+
+enum ActionEventResult {
+  sent
+  failed
+  skipped
+  cancelled_paid
+}
+
+enum PaymentStatus {
+  success
+  pending
+  failed
+  refunded
+}
+
+enum PaymentMethod {
+  card
+  transfer
+  direct_debit
+}
+
+enum BankTransactionStatus {
+  unapplied
+  applied
+  excluded
+}
+
+enum DebtorRating {
+  A
+  B
+  C
+  D
+}
+
+enum UserRole {
+  admin
+  user
+}
+
+enum FirstActionLogic {
+  standard
+  contextualized
+}
+
+enum TemplateChannel {
+  email
+  letter
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+type Company {
+  id: ID!
+  name: String!
+  slug: String!
+  plan: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type User {
+  id: ID!
+  companyId: ID!
+  email: String!
+  name: String!
+  role: UserRole!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type EmailTemplate {
+  id: ID!
+  companyId: ID!
+  name: String!
+  subject: String!
+  body: String!
+  channel: TemplateChannel!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type Action {
+  id: ID!
+  workflowId: ID!
+  delayDays: Int!
+  trigger: ActionTrigger!
+  channel: ActionChannel!
+  templateId: ID
+  template: EmailTemplate
+  senderName: String
+  stepOrder: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type Workflow {
+  id: ID!
+  companyId: ID!
+  name: String!
+  minContactDelayDays: Int!
+  firstActionLogic: FirstActionLogic!
+  replyTo: String
+  isActive: Boolean!
+  actions: [Action!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type InvoiceEdge {
+  cursor: String!
+  node: Invoice!
+}
+
+type InvoiceConnection {
+  edges: [InvoiceEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type Debtor {
+  id: ID!
+  companyId: ID!
+  name: String!
+  email: String
+  rating: DebtorRating
+  hasPaymentMethod: Boolean!
+  assignedUserId: ID
+  assignedUser: User
+  workflowId: ID
+  workflow: Workflow
+  invoices(first: Int, after: String): InvoiceConnection!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type Execution {
+  id: ID!
+  invoiceId: ID!
+  invoice: Invoice!
+  workflowId: ID!
+  workflow: Workflow!
+  currentActionId: ID
+  currentAction: Action
+  status: ExecutionStatus!
+  nextRunAt: DateTime
+  actionEvents: [ActionEvent!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type Invoice {
+  id: ID!
+  companyId: ID!
+  debtorId: ID!
+  debtor: Debtor!
+  number: String!
+  amount: Float!
+  outstanding: Float!
+  currency: String!
+  issueDate: Date!
+  dueDate: Date!
+  status: InvoiceStatus!
+  paidAt: DateTime
+  execution: Execution
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type ActionEvent {
+  id: ID!
+  executionId: ID!
+  execution: Execution!
+  actionId: ID!
+  action: Action!
+  triggeredAt: DateTime!
+  result: ActionEventResult!
+  error: String
+  metadata: JSON
+}
+
+type Payment {
+  id: ID!
+  companyId: ID!
+  debtorId: ID
+  debtor: Debtor
+  invoiceId: ID
+  invoice: Invoice
+  reference: String!
+  amount: Float!
+  currency: String!
+  method: PaymentMethod
+  source: String
+  status: PaymentStatus!
+  receivedAt: DateTime!
+  createdAt: DateTime!
+}
+
+type BankTransaction {
+  id: ID!
+  companyId: ID!
+  amount: Float!
+  currency: String!
+  description: String
+  payer: String
+  status: BankTransactionStatus!
+  appliedAmount: Float!
+  paymentId: ID
+  payment: Payment
+  externalSync: Boolean!
+  postedAt: Date!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type TrendPoint {
+  month: String!
+  value: Float!
+}
+
+type TopDebtor {
+  debtorId: ID!
+  name: String!
+  outstanding: Float!
+  invoiceCount: Int!
+}
+
+type AgingBucket {
+  label: String!
+  amount: Float!
+  count: Int!
+}
+
+type Dashboard {
+  totalUnpaid: Float!
+  totalDue: Float!
+  totalOverdue: Float!
+  totalUnapplied: Float!
+  dso: Float!
+  riskRate: Float!
+  dsoTrend: [TrendPoint!]!
+  riskRateTrend: [TrendPoint!]!
+  actionsToDoCount: Int!
+  topDebtors: [TopDebtor!]!
+  agingBalance: [AgingBucket!]!
+  customersWithPaymentMethod: Int!
+}
+
+type AuthPayload {
+  accessToken: String!
+  user: User!
+}
+
+type DebtorEdge {
+  cursor: String!
+  node: Debtor!
+}
+
+type DebtorConnection {
+  edges: [DebtorEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type PaymentEdge {
+  cursor: String!
+  node: Payment!
+}
+
+type PaymentConnection {
+  edges: [PaymentEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type BankTransactionEdge {
+  cursor: String!
+  node: BankTransaction!
+}
+
+type BankTransactionConnection {
+  edges: [BankTransactionEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type ActionEventEdge {
+  cursor: String!
+  node: ActionEvent!
+}
+
+type ActionEventConnection {
+  edges: [ActionEventEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+input InvoicesFilterInput {
+  status: InvoiceStatus
+  debtorId: ID
+  search: String
+}
+
+input DebtorsFilterInput {
+  rating: DebtorRating
+  workflowId: ID
+  search: String
+}
+
+input PaymentsFilterInput {
+  status: PaymentStatus
+  debtorId: ID
+}
+
+input BankTransactionsFilterInput {
+  status: BankTransactionStatus
+}
+
+input ActionEventsFilterInput {
+  executionId: ID
+  result: ActionEventResult
+}
+
+input CreateWorkflowInput {
+  name: String!
+  minContactDelayDays: Int
+  firstActionLogic: FirstActionLogic
+  replyTo: String
+  isActive: Boolean
+}
+
+input UpdateWorkflowInput {
+  name: String
+  minContactDelayDays: Int
+  firstActionLogic: FirstActionLogic
+  replyTo: String
+  isActive: Boolean
+}
+
+input ApplyBankTransactionInput {
+  bankTransactionId: ID!
+  paymentId: ID!
+  appliedAmount: Float!
+}
+
+type Query {
+  dashboard: Dashboard!
+  invoices(first: Int, after: String, filter: InvoicesFilterInput): InvoiceConnection!
+  invoice(id: ID!): Invoice!
+  debtors(first: Int, after: String, filter: DebtorsFilterInput): DebtorConnection!
+  debtor(id: ID!): Debtor!
+  workflows: [Workflow!]!
+  workflow(id: ID!): Workflow!
+  payments(first: Int, after: String, filter: PaymentsFilterInput): PaymentConnection!
+  bankTransactions(first: Int, after: String, filter: BankTransactionsFilterInput): BankTransactionConnection!
+  actionEvents(first: Int, after: String, filter: ActionEventsFilterInput): ActionEventConnection!
+  emailTemplates: [EmailTemplate!]!
+}
+
+type Mutation {
+  login(email: String!, password: String!, companySlug: String!): AuthPayload!
+  refreshToken(token: String!): AuthPayload!
+  logout: Boolean!
+  sendAction(executionId: ID!, actionId: ID!): ActionEvent!
+  pauseExecution(executionId: ID!): Execution!
+  resumeExecution(executionId: ID!): Execution!
+  createWorkflow(input: CreateWorkflowInput!): Workflow!
+  updateWorkflow(id: ID!, input: UpdateWorkflowInput!): Workflow!
+  applyBankTransaction(input: ApplyBankTransactionInput!): BankTransaction!
+}

@@ -29,33 +29,33 @@ Web application for managing unpaid invoice dunning — a functional clone of Up
 |---|---|
 | **Monorepo** | pnpm workspaces, root `package.json`, `pnpm-workspace.yaml` |
 | **Docker** | `docker-compose.yml` — postgres:16-alpine (port **5433**), redis:7-alpine (port **6380**), init script creates `cashflow_test` DB |
-| **Backend scaffold** | `packages/backend/` — `tsconfig.json` (strict), `package.json`, `.env.example`, empty `src/index.ts` |
-| **Frontend scaffold** | `packages/frontend/` — `tsconfig.json` (strict, react-jsx), `vite.config.ts` (React plugin, `@` alias, `/graphql` proxy), `index.html`, `src/main.tsx` |
+| **Backend scaffold** | `packages/backend/` — `tsconfig.json` (strict + `@` path aliases), `package.json`, `.env.example` |
+| **Frontend scaffold** | `packages/frontend/` — `tsconfig.json` (strict, react-jsx), `vite.config.ts` (React plugin, `@` alias, `/graphql` proxy to **4040**, dev port **3333**), `index.html`, `src/main.tsx` |
 | **Migrations** | 12 migrations via `db-migrate` in `src/db/migrations/sqls/` — all tables + all indexes including the two critical partial indexes (`idx_invoices_unpaid`, `idx_executions_next_run`) |
 | **Seeds** | 12 seeders in `src/db/seeds/` — 3 companies, 10 users, 7 workflows, 22 actions, 850 debtors, 1 550 invoices, 767 executions, 396 action events, 788 payments, 415 bank transactions |
+| **DB pool** | `src/db/pool.ts` — `pg.Pool` singleton (max 20 connections) |
+| **Auth** | `src/auth/` — JWT sign/verify (15 min access + 7 day refresh), Express middleware, `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout` |
+| **Redis cache** | `src/cache/redis.ts` — ioredis singleton + BullMQ-compatible factory; `src/cache/dashboard.ts` — get/set/invalidate with 5 min TTL |
+| **GraphQL schema** | `src/graphql/schema.graphql` — full SDL: 3 scalars, 12 enums, 11 domain types, 5 cursor-based connection types, Dashboard type, 11 queries, 8 mutations |
+| **DataLoaders** | `src/graphql/dataloaders.ts` — 12 loaders (all per-request, scoped to `companyId`): userById, debtorById, invoiceById, workflowById, actionById, emailTemplateById, executionById, executionByInvoiceId, actionsByWorkflowId, actionEventsByExecutionId, paymentById, invoicesByDebtorId |
+| **Services** | 10 service files in `src/graphql/services/` — all SQL lives here, all queries scoped to `company_id` |
+| **Resolvers** | 12 resolver files in `src/graphql/resolvers/` + scalar definitions — thin layer, delegates to services, uses DataLoaders for relations |
+| **BullMQ queue** | `src/queues/dunning.queue.ts` — `dunning-queue`, 3 attempts with exponential backoff |
+| **BullMQ worker** | `src/queues/dunning.worker.ts` — idempotency → invoice lock → pause-if-paid → log → insert event → advance execution → invalidate cache |
+| **Scheduler** | `src/queues/dunning.scheduler.ts` — polls `executions` every 60s, enqueues with 0–5 min jitter |
+| **Express server** | `src/index.ts` — Express + Apollo Server v4 (`expressMiddleware`), auth middleware, health endpoint, scheduler + worker startup |
 
 ### 🔲 To Do — Backend
 
 | Area | What needs to be built |
 |---|---|
-| **DB pool** | `src/db/pool.ts` — `pg.Pool` singleton exported for use by resolvers and services |
-| **Auth** | `src/auth/` — `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout`, JWT sign/verify helpers, Express middleware that injects `{ companyId, userId }` into context |
-| **GraphQL schema** | `src/graphql/schema.graphql` — SDL for all types: Company, User, Debtor, Invoice, Workflow, Action, Execution, Payment, BankTransaction, Dashboard |
-| **Resolvers** | One file per domain: `invoices.resolver.ts`, `debtors.resolver.ts`, `workflows.resolver.ts`, `payments.resolver.ts`, `bankTransactions.resolver.ts`, `dashboard.resolver.ts` |
-| **DataLoaders** | Loaders for every relation to avoid N+1 (debtor → invoices, execution → action, etc.) |
-| **Mutations** | `sendAction`, `pauseExecution`, `createWorkflow`, `updateWorkflow`, `applyBankTransaction` |
-| **Redis cache** | `src/cache/` — client singleton, `get`/`set`/`del` helpers, invalidation on KPI-affecting mutations |
-| **BullMQ queue** | `src/queues/dunning.queue.ts` — queue definition, job payload type |
-| **BullMQ worker** | `src/queues/dunning.worker.ts` — idempotency check → invoice status check → simulate send → insert `action_events` → advance execution |
-| **Scheduler** | `src/queues/scheduler.ts` — polls `executions` every 60s, enqueues with 0–5 min jitter |
-| **Express server** | `src/index.ts` — wire Express + Apollo Server + auth middleware + health endpoint |
-| **Tests** | Unit tests for resolvers and worker; integration tests for auth endpoints |
+| **Tests** | Unit tests for resolvers and worker; integration tests for auth endpoints (`tests/unit/`, `tests/integration/`) |
 
 ### 🔲 To Do — Frontend
 
 | Area | What needs to be built |
 |---|---|
-| **Apollo Client** | `src/graphql/client.ts` — ApolloClient setup with auth headers |
+| **Apollo Client** | `src/graphql/client.ts` — ApolloClient with auth headers and token refresh link |
 | **Router** | React Router v6 setup in `main.tsx` with all routes |
 | **AuthContext** | `src/contexts/AuthContext.tsx` — login, logout, token refresh, company/user state |
 | **UIContext** | `src/contexts/UIContext.tsx` — language, sidebar state |
@@ -136,7 +136,7 @@ pnpm seed
 pnpm dev
 ```
 
-The GraphQL API will be available at: http://localhost:4000/graphql
+The GraphQL API will be available at: http://localhost:4040/graphql
 
 ### 4. Start the frontend
 
@@ -145,7 +145,7 @@ The GraphQL API will be available at: http://localhost:4000/graphql
 pnpm dev
 ```
 
-The application will be available at: http://localhost:5173
+The application will be available at: http://localhost:3333
 
 ---
 
@@ -156,21 +156,21 @@ Three companies are available after seeding:
 ### Open Demo Inc. — B2B SaaS
 | Field | Value |
 |---|---|
-| URL | http://localhost:5173/open-demo |
+| URL | http://localhost:3333/open-demo |
 | Email | john.doe@open-demo.com |
 | Password | demo1234 |
 
 ### Acme Finance — Financial Services
 | Field | Value |
 |---|---|
-| URL | http://localhost:5173/acme-finance |
+| URL | http://localhost:3333/acme-finance |
 | Email | jane.smith@acme-finance.com |
 | Password | demo1234 |
 
 ### Nord Supply — Distribution
 | Field | Value |
 |---|---|
-| URL | http://localhost:5173/nord-supply |
+| URL | http://localhost:3333/nord-supply |
 | Email | marc.dupont@nord-supply.com |
 | Password | demo1234 |
 
@@ -191,17 +191,33 @@ cashflow/
 ├── packages/
 │   ├── backend/
 │   │   ├── src/
-│   │   │   ├── auth/                 # [TODO] JWT helpers, middleware, login/refresh routes
-│   │   │   ├── graphql/              # [TODO] schema.graphql, resolvers, dataloaders
+│   │   │   ├── auth/                 # ✅ JWT helpers, middleware, login/refresh/logout routes
+│   │   │   │   ├── types.ts
+│   │   │   │   ├── jwt.ts
+│   │   │   │   ├── middleware.ts
+│   │   │   │   └── routes.ts
+│   │   │   ├── graphql/              # ✅ schema SDL, resolvers, services, dataloaders
+│   │   │   │   ├── schema.graphql
+│   │   │   │   ├── context.ts
+│   │   │   │   ├── dataloaders.ts    # 12 DataLoaders, all per-request + tenant-scoped
+│   │   │   │   ├── resolvers/        # 12 resolver files + scalars + index
+│   │   │   │   └── services/         # 10 service files (all SQL here)
 │   │   │   ├── db/
+│   │   │   │   ├── pool.ts           # ✅ pg.Pool singleton
 │   │   │   │   ├── migrations/       # ✅ 12 migrations (db-migrate, SQL files)
 │   │   │   │   └── seeds/            # ✅ 12 seeders (faker, batch inserts)
-│   │   │   ├── queues/               # [TODO] BullMQ dunning queue, worker, scheduler
-│   │   │   ├── cache/                # [TODO] Redis client, KPI cache helpers
-│   │   │   └── index.ts              # [TODO] Express + Apollo server bootstrap
+│   │   │   ├── queues/               # ✅ BullMQ dunning queue, worker, scheduler
+│   │   │   │   ├── dunning.queue.ts
+│   │   │   │   ├── dunning.worker.ts
+│   │   │   │   └── dunning.scheduler.ts
+│   │   │   ├── cache/                # ✅ Redis client, KPI cache helpers
+│   │   │   │   ├── redis.ts
+│   │   │   │   └── dashboard.ts
+│   │   │   └── index.ts              # ✅ Express + Apollo Server v4 bootstrap
 │   │   ├── tests/
-│   │   │   ├── unit/
-│   │   │   └── integration/
+│   │   │   ├── unit/                 # [TODO]
+│   │   │   └── integration/          # [TODO]
+│   │   ├── register-paths.js         # ✅ runtime path alias resolver (tsconfig-paths)
 │   │   ├── database.json             # ✅ db-migrate config
 │   │   ├── package.json
 │   │   └── tsconfig.json
@@ -215,7 +231,7 @@ cashflow/
 │       │   ├── hooks/                # [TODO] useInvoices, useDebtors, etc.
 │       │   └── locales/              # ✅ fr.json + en.json (empty, ready to fill)
 │       ├── index.html                # ✅
-│       ├── vite.config.ts            # ✅ React plugin, @ alias, /graphql proxy
+│       ├── vite.config.ts            # ✅ React plugin, @ alias, /graphql proxy → 4040, port 3333
 │       ├── package.json
 │       └── tsconfig.json
 │
@@ -285,7 +301,7 @@ The automated dunning system works as follows:
 
 ```env
 NODE_ENV=development
-PORT=4000
+PORT=4040
 DATABASE_URL=postgresql://cashflow:cashflow@localhost:5433/cashflow
 TEST_DATABASE_URL=postgresql://cashflow:cashflow@localhost:5433/cashflow_test
 REDIS_URL=redis://localhost:6380
@@ -296,7 +312,7 @@ JWT_REFRESH_SECRET=change_me_too
 ### Frontend (`packages/frontend/.env`)
 
 ```env
-VITE_API_URL=http://localhost:4000/graphql
+VITE_API_URL=http://localhost:4040/graphql
 ```
 
 ---
