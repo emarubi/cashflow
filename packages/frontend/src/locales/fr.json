@@ -39,5 +39,17 @@
   "dashboard.main_debtors": "Principaux débiteurs",
   "dashboard.see_more": "Voir plus",
   "dashboard.aging_balance": "Balance âgée",
-  "dashboard.invoice_count": "{{count}} facture(s)"
+  "dashboard.invoice_count": "{{count}} facture(s)",
+  "workflows.subtitle": "Personnalisez et assignez vos workflows.",
+  "workflows.how_to": "Comment configurer un workflow ?",
+  "workflows.new": "Nouveau",
+  "workflows.col_type": "Type",
+  "workflows.col_name": "Nom",
+  "workflows.col_customers": "Clients",
+  "workflows.col_actions": "Actions réalisées",
+  "workflows.col_open_rate": "Taux d'ouverture",
+  "workflows.col_outstanding": "Encours",
+  "workflows.col_dso": "DSO",
+  "workflows.days": "{{count}} jours",
+  "workflows.na": "N/A"
 }

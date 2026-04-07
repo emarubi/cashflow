@@ -52,6 +52,12 @@ export interface WorkflowRow {
   is_active: boolean
   created_at: Date
   updated_at: Date
+  // Computed metrics — present on list() results, absent when loaded via DataLoader
+  customer_count?: number | null
+  performed_actions_count?: number
+  email_open_rate?: number | null
+  outstanding?: number | null
+  dso?: number | null
 }
 
 export interface ActionRow {

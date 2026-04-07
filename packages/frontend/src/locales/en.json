@@ -39,5 +39,17 @@
   "dashboard.main_debtors": "Main Debtors",
   "dashboard.see_more": "See more",
   "dashboard.aging_balance": "Aging Balance",
-  "dashboard.invoice_count": "{{count}} invoice(s)"
+  "dashboard.invoice_count": "{{count}} invoice(s)",
+  "workflows.subtitle": "Customize and assign your workflows.",
+  "workflows.how_to": "How to set up a workflow?",
+  "workflows.new": "New",
+  "workflows.col_type": "Type",
+  "workflows.col_name": "Name",
+  "workflows.col_customers": "Customers",
+  "workflows.col_actions": "Performed Actions",
+  "workflows.col_open_rate": "Email open rate",
+  "workflows.col_outstanding": "Outstanding",
+  "workflows.col_dso": "DSO",
+  "workflows.days": "{{count}} days",
+  "workflows.na": "N/A"
 }

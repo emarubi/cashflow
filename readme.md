@@ -51,28 +51,35 @@ Web application for managing unpaid invoice dunning — a functional clone of Up
 |---|---|
 | **Tests** | Unit tests for resolvers and worker; integration tests for auth endpoints (`tests/unit/`, `tests/integration/`) |
 
+### ✅ Done — Frontend
+
+| Area | What was built |
+|---|---|
+| **Tailwind CSS** | `tailwind.config.js` + `postcss.config.js` + `src/index.css` — custom sidebar color tokens |
+| **Apollo Client** | `src/graphql/client.ts` — authLink (Bearer token), errorLink (redirect on UNAUTHENTICATED), InMemoryCache with cursor-based pagination policies |
+| **i18n** | `src/i18n.ts` — react-i18next init, default lang `fr`, persisted to `localStorage`; `fr.json` + `en.json` populated with nav + auth + dashboard keys |
+| **AuthContext** | `src/contexts/AuthContext.tsx` — `login()` calls GraphQL mutation, JWT decoded client-side for `companySlug`; state + localStorage persisted (`cashflow_token`, `cashflow_user`, `cashflow_company`) |
+| **UIContext** | `src/contexts/UIContext.tsx` — `language`, `setLanguage` (persisted), `sidebarOpen` |
+| **Router** | `src/App.tsx` — `createBrowserRouter`, all 10 routes under `/:companySlug/*`, unauthenticated redirect to `/login` |
+| **Layout** | `src/components/Layout/` — auth guard + Sidebar + Outlet |
+| **Sidebar** | `src/components/Layout/Sidebar.tsx` — icon-only dark navy (~56px), inline SVGs, NavLink active state with blue left border, user avatar initials |
+| **Login page** | `src/pages/Login/` — company slug + email + password form, error display |
+| **Dashboard** | `src/pages/Dashboard/` — full implementation: KPI cards, outstanding breakdown, DSO + risk rate trend cards with sparkline bar charts (Recharts), top debtors list, aging balance chart |
+| **Page stubs** | Workflows, WorkflowDetail, Customers, CustomerDetail, Invoices, Actions, Payments, Bank — all scaffolded, ready to implement |
+
 ### 🔲 To Do — Frontend
 
 | Area | What needs to be built |
 |---|---|
-| **Apollo Client** | `src/graphql/client.ts` — ApolloClient with auth headers and token refresh link |
-| **Router** | React Router v6 setup in `main.tsx` with all routes |
-| **AuthContext** | `src/contexts/AuthContext.tsx` — login, logout, token refresh, company/user state |
-| **UIContext** | `src/contexts/UIContext.tsx` — language, sidebar state |
-| **i18n** | `src/locales/fr.json` + `en.json` — all translation keys, `react-i18next` init |
-| **Layout** | `src/components/Layout/` — sidebar navigation, top bar, matching Upflow screenshots |
-| **Login page** | `src/pages/Login/` — company slug login form |
-| **Dashboard** | `src/pages/Dashboard/` — KPIs, DSO bar chart, risk rate chart, aging balance, top debtors |
 | **Workflows** | `src/pages/Workflows/` — list + detail with action sequence editor |
 | **Customers** | `src/pages/Customers/` — paginated list + customer detail (invoices, action history) |
 | **Invoices** | `src/pages/Invoices/` — paginated list with status filters, invoice detail |
 | **Actions** | `src/pages/Actions/` — To Do / All views, action send/pause/ignore |
-| **Emails** | `src/pages/Emails/` — email history per customer and invoice |
 | **Payments** | `src/pages/Payments/` — paginated list with filters |
 | **Bank** | `src/pages/Bank/` — transaction list, reconciliation suggestions |
-| **GraphQL queries** | One file per page in `src/graphql/queries/` |
+| **GraphQL queries** | Remaining pages in `src/graphql/queries/` |
 | **GraphQL mutations** | In `src/graphql/mutations/` |
-| **Custom hooks** | `useInvoices`, `useDebtors`, `useWorkflows`, `useDashboard`, etc. |
+| **Custom hooks** | `useInvoices`, `useDebtors`, `useWorkflows`, etc. |
 | **Tests** | RTL tests for key components and hooks |
 
 ---
@@ -224,13 +231,32 @@ cashflow/
 │   │
 │   └── frontend/
 │       ├── src/
-│       │   ├── components/           # [TODO] Layout, Sidebar, shared UI
-│       │   ├── pages/                # [TODO] all 10 pages
-│       │   ├── contexts/             # [TODO] AuthContext, UIContext
-│       │   ├── graphql/              # [TODO] queries/, mutations/, client.ts
-│       │   ├── hooks/                # [TODO] useInvoices, useDebtors, etc.
-│       │   └── locales/              # ✅ fr.json + en.json (empty, ready to fill)
+│       │   ├── components/
+│       │   │   └── Layout/           # ✅ Layout (auth guard + Outlet), Sidebar (icon-only dark nav)
+│       │   ├── pages/
+│       │   │   ├── Login/            # ✅ login form (slug + email + password)
+│       │   │   ├── Dashboard/        # ✅ KPIs, outstanding, DSO, risk rate, debtors, aging balance
+│       │   │   ├── Workflows/        # stub
+│       │   │   ├── Customers/        # stub
+│       │   │   ├── Invoices/         # stub
+│       │   │   ├── Actions/          # stub
+│       │   │   ├── Payments/         # stub
+│       │   │   └── Bank/             # stub
+│       │   ├── contexts/
+│       │   │   ├── AuthContext.tsx   # ✅ login/logout, JWT decode, localStorage
+│       │   │   └── UIContext.tsx     # ✅ language, sidebarOpen
+│       │   ├── graphql/
+│       │   │   ├── client.ts         # ✅ ApolloClient, authLink, errorLink
+│       │   │   └── queries/
+│       │   │       └── dashboard.ts  # ✅ GET_DASHBOARD query
+│       │   ├── hooks/
+│       │   │   └── useDashboard.ts   # ✅
+│       │   ├── locales/              # ✅ fr.json + en.json (nav + auth + dashboard keys)
+│       │   ├── i18n.ts               # ✅ react-i18next init
+│       │   └── App.tsx               # ✅ createBrowserRouter, all 10 routes
 │       ├── index.html                # ✅
+│       ├── tailwind.config.js        # ✅ custom sidebar color tokens
+│       ├── postcss.config.js         # ✅
 │       ├── vite.config.ts            # ✅ React plugin, @ alias, /graphql proxy → 4040, port 3333
 │       ├── package.json
 │       └── tsconfig.json

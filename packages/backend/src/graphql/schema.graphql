@@ -139,6 +139,11 @@ type Workflow {
   actions: [Action!]!
   createdAt: DateTime!
   updatedAt: DateTime!
+  customerCount: Int
+  performedActionsCount: Int
+  emailOpenRate: Float
+  outstanding: Float
+  dso: Float
 }
 
 type InvoiceEdge {

@@ -22,8 +22,23 @@ export class WorkflowService {
 
   async list(companyId: string): Promise<WorkflowRow[]> {
     const { rows } = await this.pool.query<WorkflowRow>(
-      `SELECT id, company_id, name, min_contact_delay_days, first_action_logic, reply_to, is_active, created_at, updated_at
-       FROM workflows WHERE company_id = $1 ORDER BY created_at DESC`,
+      `SELECT
+         w.id, w.company_id, w.name, w.min_contact_delay_days,
+         w.first_action_logic, w.reply_to, w.is_active, w.created_at, w.updated_at,
+         COUNT(DISTINCT i.debtor_id)::int                                             AS customer_count,
+         COALESCE(COUNT(ae.id) FILTER (WHERE ae.result = 'sent'), 0)::int            AS performed_actions_count,
+         COUNT(ae.id) FILTER (WHERE ae.result = 'sent')::float
+           / NULLIF(COUNT(ae.id) FILTER (WHERE ae.result IN ('sent', 'failed')), 0)  AS email_open_rate,
+         SUM(i.amount) FILTER (WHERE i.status != 'paid')                             AS outstanding,
+         AVG(GREATEST(0, EXTRACT(DAY FROM NOW() - i.due_date)::int))
+           FILTER (WHERE i.status != 'paid')                                         AS dso
+       FROM workflows w
+       LEFT JOIN executions    e  ON e.workflow_id = w.id
+       LEFT JOIN invoices      i  ON i.id = e.invoice_id
+       LEFT JOIN action_events ae ON ae.execution_id = e.id
+       WHERE w.company_id = $1
+       GROUP BY w.id
+       ORDER BY outstanding DESC NULLS LAST`,
       [companyId],
     )
     return rows
