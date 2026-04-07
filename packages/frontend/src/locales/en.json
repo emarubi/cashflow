@@ -1,1 +1,24 @@
-{}
+{
+  "nav.dashboard": "Dashboard",
+  "nav.workflows": "Workflows",
+  "nav.customers": "Customers",
+  "nav.invoices": "Invoices",
+  "nav.actions": "Actions",
+  "nav.payments": "Payments",
+  "nav.bank": "Transactions",
+  "nav.settings": "Settings",
+  "common.loading": "Loading...",
+  "common.error": "An error occurred",
+  "common.save": "Save",
+  "common.cancel": "Cancel",
+  "common.delete": "Delete",
+  "common.edit": "Edit",
+  "common.search": "Search",
+  "common.filter": "Filter",
+  "common.seeAll": "See all",
+  "auth.login": "Sign in",
+  "auth.logout": "Sign out",
+  "auth.email": "Email",
+  "auth.password": "Password",
+  "auth.company": "Company ID"
+}

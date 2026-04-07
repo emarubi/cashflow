@@ -1,1 +1,24 @@
-{}
+{
+  "nav.dashboard": "Tableau de bord",
+  "nav.workflows": "Workflows",
+  "nav.customers": "Clients",
+  "nav.invoices": "Factures",
+  "nav.actions": "Actions",
+  "nav.payments": "Paiements",
+  "nav.bank": "Transactions",
+  "nav.settings": "Paramètres",
+  "common.loading": "Chargement...",
+  "common.error": "Une erreur est survenue",
+  "common.save": "Enregistrer",
+  "common.cancel": "Annuler",
+  "common.delete": "Supprimer",
+  "common.edit": "Modifier",
+  "common.search": "Rechercher",
+  "common.filter": "Filtrer",
+  "common.seeAll": "Voir tout",
+  "auth.login": "Se connecter",
+  "auth.logout": "Se déconnecter",
+  "auth.email": "Email",
+  "auth.password": "Mot de passe",
+  "auth.company": "Identifiant entreprise"
+}
