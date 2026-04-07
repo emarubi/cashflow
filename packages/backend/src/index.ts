@@ -13,6 +13,7 @@ import { resolvers } from '@graphql/resolvers'
 import { buildContext, ApolloContext } from '@graphql/context'
 import { startScheduler } from '@queues/dunning.scheduler'
 import { dunningWorker } from '@queues/dunning.worker'
+import { startDLQ } from '@queues/dunning.dlq'
 
 const typeDefs = readFileSync(join(__dirname, 'graphql/schema.graphql'), 'utf8')
 
@@ -51,6 +52,7 @@ async function main(): Promise<void> {
 
   // Start BullMQ scheduler and worker
   startScheduler()
+  startDLQ()
   console.log(`[WORKER] Dunning worker started (concurrency=5)`)
   console.log(`Worker status: ${dunningWorker.isRunning() ? 'running' : 'idle'}`)
 }
