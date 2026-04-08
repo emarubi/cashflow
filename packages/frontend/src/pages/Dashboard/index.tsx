@@ -52,10 +52,10 @@ export default function DashboardPage() {
           label={t('dashboard.actions_todo')}
           sublabel={t('dashboard.actions_sublabel')}
           variant="blue"
-          ctaLabel={t('dashboard.become_unpaid')}
+          ctaLabel={t('dashboard.recover_unpaid_invoices')}
           ctaTo={`/${slug}/actions`}
-          secondaryLabel={t('dashboard.see_statistics')}
-          secondaryTo={`/${slug}/actions`}
+          secondaryLabel={t('dashboard.edit_workflows')}
+          secondaryTo={`/${slug}/workflows`}
         />
 
         <KpiCard
