@@ -109,4 +109,37 @@ export class DebtorService {
     )
     return rows[0] ?? null
   }
+
+  async getOutstandingAmount(id: string, companyId: string): Promise<number> {
+    const { rows } = await this.pool.query<{ total: string }>(
+      `SELECT COALESCE(SUM(outstanding), 0) AS total
+       FROM invoices
+       WHERE debtor_id = $1 AND company_id = $2 AND status IN ('due', 'overdue')`,
+      [id, companyId],
+    )
+    return parseFloat(rows[0]?.total ?? '0')
+  }
+
+  async getAvgPaymentDelayDays(id: string, companyId: string): Promise<number | null> {
+    const { rows } = await this.pool.query<{ avg_days: string | null }>(
+      `SELECT AVG(EXTRACT(DAY FROM (paid_at - due_date))) AS avg_days
+       FROM invoices
+       WHERE debtor_id = $1 AND company_id = $2 AND status = 'paid' AND paid_at IS NOT NULL`,
+      [id, companyId],
+    )
+    const val = rows[0]?.avg_days
+    return val !== null && val !== undefined ? Math.round(parseFloat(val)) : null
+  }
+
+  async getLastContactedAt(id: string, companyId: string): Promise<Date | null> {
+    const { rows } = await this.pool.query<{ last_at: Date | null }>(
+      `SELECT MAX(ae.triggered_at) AS last_at
+       FROM action_events ae
+       JOIN executions e ON e.id = ae.execution_id
+       JOIN invoices i ON i.id = e.invoice_id
+       WHERE i.debtor_id = $1 AND i.company_id = $2`,
+      [id, companyId],
+    )
+    return rows[0]?.last_at ?? null
+  }
 }

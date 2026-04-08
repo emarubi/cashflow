@@ -3,6 +3,7 @@ import { ActionEventRow } from '@graphql/dataloaders'
 
 interface ActionEventFilter {
   executionId?: string
+  debtorId?: string
   result?: string
 }
 
@@ -40,6 +41,11 @@ export class ActionEventService {
       params.push(filter.executionId)
       paramIdx++
     }
+    if (filter?.debtorId) {
+      conditions.push(`i.debtor_id = $${paramIdx}`)
+      params.push(filter.debtorId)
+      paramIdx++
+    }
     if (filter?.result) {
       conditions.push(`ae.result = $${paramIdx}`)
       params.push(filter.result)
@@ -64,8 +70,16 @@ export class ActionEventService {
          FROM action_events ae
          JOIN executions e ON e.id = ae.execution_id
          JOIN invoices i ON i.id = e.invoice_id
-         WHERE i.company_id = $1${filter?.executionId ? ' AND ae.execution_id = $2' : ''}${filter?.result ? ` AND ae.result = $${filter?.executionId ? '3' : '2'}` : ''}`,
-        [companyId, ...(filter?.executionId ? [filter.executionId] : []), ...(filter?.result ? [filter.result] : [])],
+         WHERE i.company_id = $1
+         ${filter?.executionId ? ' AND ae.execution_id = $2' : ''}
+         ${filter?.debtorId ? ` AND i.debtor_id = $${filter?.executionId ? '3' : '2'}` : ''}
+         ${filter?.result ? ` AND ae.result = $${[filter?.executionId, filter?.debtorId].filter(Boolean).length + 2}` : ''}`,
+        [
+          companyId,
+          ...(filter?.executionId ? [filter.executionId] : []),
+          ...(filter?.debtorId ? [filter.debtorId] : []),
+          ...(filter?.result ? [filter.result] : []),
+        ],
       ),
     ])
 

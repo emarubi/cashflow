@@ -164,6 +164,9 @@ type Debtor {
   email: String
   rating: DebtorRating
   hasPaymentMethod: Boolean!
+  outstandingAmount: Float!
+  avgPaymentDelayDays: Float
+  lastContactedAt: DateTime
   assignedUserId: ID
   assignedUser: User
   workflowId: ID
@@ -357,6 +360,7 @@ input BankTransactionsFilterInput {
 
 input ActionEventsFilterInput {
   executionId: ID
+  debtorId: ID
   result: ActionEventResult
 }
 

@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "ts-node-dev -r tsconfig-paths/register --respawn --transpile-only src/index.ts",
-    "build": "tsc && mkdir -p dist/graphql && cp src/graphql/schema.graphql dist/graphql/schema.graphql",
+    "build": "tsc && mkdir -p dist/graphql && cp @/graphql/schema.graphql dist/graphql/schema.graphql",
     "start": "node -r ./register-paths.js dist/index.js",
     "test": "jest",
     "test:unit": "jest --testPathPattern=tests/unit",
@@ -51,7 +51,7 @@
     "testEnvironment": "node",
     "moduleNameMapper": {
       "^@auth/(.*)$": "<rootDir>/src/auth/$1",
-      "^@graphql/(.*)$": "<rootDir>/src/graphql/$1",
+      "^@graphql/(.*)$": "<rootDir>/@/graphql/$1",
       "^@db/(.*)$": "<rootDir>/src/db/$1",
       "^@queues/(.*)$": "<rootDir>/src/queues/$1",
       "^@cache/(.*)$": "<rootDir>/src/cache/$1"

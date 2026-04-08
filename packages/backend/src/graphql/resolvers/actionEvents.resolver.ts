@@ -10,7 +10,7 @@ function requireAuth(ctx: ApolloContext): void {
 
 export const actionEventResolvers = {
   Query: {
-    actionEvents: (_: unknown, args: { first?: number; after?: string; filter?: { executionId?: string; result?: string } }, ctx: ApolloContext) => {
+    actionEvents: (_: unknown, args: { first?: number; after?: string; filter?: { executionId?: string; debtorId?: string; result?: string } }, ctx: ApolloContext) => {
       requireAuth(ctx)
       const svc = new ActionEventService(ctx.pool)
       return svc.list(ctx.companyId, args.first ?? 20, args.after, args.filter)

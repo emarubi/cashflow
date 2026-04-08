@@ -6,18 +6,18 @@ Web application for managing unpaid invoice dunning — a functional clone of Up
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Backend | Node.js, Express, TypeScript |
-| API | Apollo Server (GraphQL) |
-| Database | PostgreSQL |
-| Cache & Queues | Redis, BullMQ |
-| Frontend | React, TypeScript, Apollo Client |
-| Styling | Tailwind CSS |
-| Global State | React Context |
-| i18n | react-i18next (FR + EN) |
-| Tests | Jest, Supertest, React Testing Library |
-| Local Infra | Docker Compose |
+| Layer          | Technology                             |
+| -------------- | -------------------------------------- |
+| Backend        | Node.js, Express, TypeScript           |
+| API            | Apollo Server (GraphQL)                |
+| Database       | PostgreSQL                             |
+| Cache & Queues | Redis, BullMQ                          |
+| Frontend       | React, TypeScript, Apollo Client       |
+| Styling        | Tailwind CSS                           |
+| Global State   | React Context                          |
+| i18n           | react-i18next (FR + EN)                |
+| Tests          | Jest, Supertest, React Testing Library |
+| Local Infra    | Docker Compose                         |
 
 ---
 
@@ -25,62 +25,62 @@ Web application for managing unpaid invoice dunning — a functional clone of Up
 
 ### ✅ Done
 
-| Area | What was built |
-|---|---|
-| **Monorepo** | pnpm workspaces, root `package.json`, `pnpm-workspace.yaml` |
-| **Docker** | `docker-compose.yml` — postgres:16-alpine (port **5433**), redis:7-alpine (port **6380**), init script creates `cashflow_test` DB |
-| **Backend scaffold** | `packages/backend/` — `tsconfig.json` (strict + `@` path aliases), `package.json`, `.env.example` |
-| **Frontend scaffold** | `packages/frontend/` — `tsconfig.json` (strict, react-jsx), `vite.config.ts` (React plugin, `@` alias, `/graphql` proxy to **4040**, dev port **3333**), `index.html`, `src/main.tsx` |
-| **Migrations** | 12 migrations via `db-migrate` in `src/db/migrations/sqls/` — all tables + all indexes including the two critical partial indexes (`idx_invoices_unpaid`, `idx_executions_next_run`) |
-| **Seeds** | 12 seeders in `src/db/seeds/` — 3 companies, 10 users, 7 workflows, 22 actions, 850 debtors, 1 550 invoices, 767 executions, 396 action events, 788 payments, 415 bank transactions |
-| **DB pool** | `src/db/pool.ts` — `pg.Pool` singleton (max 20 connections) |
-| **Auth** | `src/auth/` — JWT sign/verify (15 min access + 7 day refresh), Express middleware, `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout` |
-| **Redis cache** | `src/cache/redis.ts` — ioredis singleton + BullMQ-compatible factory; `src/cache/dashboard.ts` — get/set/invalidate with 5 min TTL |
-| **GraphQL schema** | `src/graphql/schema.graphql` — full SDL: 3 scalars, 12 enums, 11 domain types, 5 cursor-based connection types, Dashboard type, 11 queries, 8 mutations |
-| **DataLoaders** | `src/graphql/dataloaders.ts` — 12 loaders (all per-request, scoped to `companyId`): userById, debtorById, invoiceById, workflowById, actionById, emailTemplateById, executionById, executionByInvoiceId, actionsByWorkflowId, actionEventsByExecutionId, paymentById, invoicesByDebtorId |
-| **Services** | 10 service files in `src/graphql/services/` — all SQL lives here, all queries scoped to `company_id` |
-| **Resolvers** | 12 resolver files in `src/graphql/resolvers/` + scalar definitions — thin layer, delegates to services, uses DataLoaders for relations |
-| **BullMQ queue** | `src/queues/dunning.queue.ts` — `dunning-queue`, 3 attempts with exponential backoff |
-| **BullMQ worker** | `src/queues/dunning.worker.ts` — idempotency → invoice lock → pause-if-paid → log → insert event → advance execution → invalidate cache |
-| **Scheduler** | `src/queues/dunning.scheduler.ts` — polls `executions` every 60s, enqueues with 0–5 min jitter |
-| **Express server** | `src/index.ts` — Express + Apollo Server v4 (`expressMiddleware`), auth middleware, health endpoint, scheduler + worker startup |
+| Area                  | What was built                                                                                                                                                                                                                                                                         |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Monorepo**          | pnpm workspaces, root `package.json`, `pnpm-workspace.yaml`                                                                                                                                                                                                                            |
+| **Docker**            | `docker-compose.yml` — postgres:16-alpine (port **5433**), redis:7-alpine (port **6380**), init script creates `cashflow_test` DB                                                                                                                                                      |
+| **Backend scaffold**  | `packages/backend/` — `tsconfig.json` (strict + `@` path aliases), `package.json`, `.env.example`                                                                                                                                                                                      |
+| **Frontend scaffold** | `packages/frontend/` — `tsconfig.json` (strict, react-jsx), `vite.config.ts` (React plugin, `@` alias, `/graphql` proxy to **4040**, dev port **3333**), `index.html`, `src/main.tsx`                                                                                                  |
+| **Migrations**        | 12 migrations via `db-migrate` in `src/db/migrations/sqls/` — all tables + all indexes including the two critical partial indexes (`idx_invoices_unpaid`, `idx_executions_next_run`)                                                                                                   |
+| **Seeds**             | 12 seeders in `src/db/seeds/` — 3 companies, 10 users, 7 workflows, 22 actions, 850 debtors, 1 550 invoices, 767 executions, 396 action events, 788 payments, 415 bank transactions                                                                                                    |
+| **DB pool**           | `src/db/pool.ts` — `pg.Pool` singleton (max 20 connections)                                                                                                                                                                                                                            |
+| **Auth**              | `src/auth/` — JWT sign/verify (15 min access + 7 day refresh), Express middleware, `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout`                                                                                                                                       |
+| **Redis cache**       | `src/cache/redis.ts` — ioredis singleton + BullMQ-compatible factory; `src/cache/dashboard.ts` — get/set/invalidate with 5 min TTL                                                                                                                                                     |
+| **GraphQL schema**    | `@/graphql/schema.graphql` — full SDL: 3 scalars, 12 enums, 11 domain types, 5 cursor-based connection types, Dashboard type, 11 queries, 8 mutations                                                                                                                                  |
+| **DataLoaders**       | `@/graphql/dataloaders.ts` — 12 loaders (all per-request, scoped to `companyId`): userById, debtorById, invoiceById, workflowById, actionById, emailTemplateById, executionById, executionByInvoiceId, actionsByWorkflowId, actionEventsByExecutionId, paymentById, invoicesByDebtorId |
+| **Services**          | 10 service files in `@/graphql/services/` — all SQL lives here, all queries scoped to `company_id`                                                                                                                                                                                     |
+| **Resolvers**         | 12 resolver files in `@/graphql/resolvers/` + scalar definitions — thin layer, delegates to services, uses DataLoaders for relations                                                                                                                                                   |
+| **BullMQ queue**      | `src/queues/dunning.queue.ts` — `dunning-queue`, 3 attempts with exponential backoff                                                                                                                                                                                                   |
+| **BullMQ worker**     | `src/queues/dunning.worker.ts` — idempotency → invoice lock → pause-if-paid → log → insert event → advance execution → invalidate cache                                                                                                                                                |
+| **Scheduler**         | `src/queues/dunning.scheduler.ts` — polls `executions` every 60s, enqueues with 0–5 min jitter                                                                                                                                                                                         |
+| **Express server**    | `src/index.ts` — Express + Apollo Server v4 (`expressMiddleware`), auth middleware, health endpoint, scheduler + worker startup                                                                                                                                                        |
 
 ### 🔲 To Do — Backend
 
-| Area | What needs to be built |
-|---|---|
+| Area      | What needs to be built                                                                                          |
+| --------- | --------------------------------------------------------------------------------------------------------------- |
 | **Tests** | Unit tests for resolvers and worker; integration tests for auth endpoints (`tests/unit/`, `tests/integration/`) |
 
 ### ✅ Done — Frontend
 
-| Area | What was built |
-|---|---|
-| **Tailwind CSS** | `tailwind.config.js` + `postcss.config.js` + `src/index.css` — custom sidebar color tokens |
-| **Apollo Client** | `src/graphql/client.ts` — authLink (Bearer token), errorLink (redirect on UNAUTHENTICATED), InMemoryCache with cursor-based pagination policies |
-| **i18n** | `src/i18n.ts` — react-i18next init, default lang `fr`, persisted to `localStorage`; `fr.json` + `en.json` populated with nav + auth + dashboard keys |
-| **AuthContext** | `src/contexts/AuthContext.tsx` — `login()` calls GraphQL mutation, JWT decoded client-side for `companySlug`; state + localStorage persisted (`cashflow_token`, `cashflow_user`, `cashflow_company`) |
-| **UIContext** | `src/contexts/UIContext.tsx` — `language`, `setLanguage` (persisted), `sidebarOpen` |
-| **Router** | `src/App.tsx` — `createBrowserRouter`, all 10 routes under `/:companySlug/*`, unauthenticated redirect to `/login` |
-| **Layout** | `src/components/Layout/` — auth guard + Sidebar + Outlet |
-| **Sidebar** | `src/components/Layout/Sidebar.tsx` — icon-only dark navy (~56px), inline SVGs, NavLink active state with blue left border, user avatar initials |
-| **Login page** | `src/pages/Login/` — company slug + email + password form, error display |
-| **Dashboard** | `src/pages/Dashboard/` — full implementation: KPI cards, outstanding breakdown, DSO + risk rate trend cards with sparkline bar charts (Recharts), top debtors list, aging balance chart |
-| **Page stubs** | Workflows, WorkflowDetail, Customers, CustomerDetail, Invoices, Actions, Payments, Bank — all scaffolded, ready to implement |
+| Area              | What was built                                                                                                                                                                                       |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Tailwind CSS**  | `tailwind.config.js` + `postcss.config.js` + `src/index.css` — custom sidebar color tokens                                                                                                           |
+| **Apollo Client** | `@/graphql/client.ts` — authLink (Bearer token), errorLink (redirect on UNAUTHENTICATED), InMemoryCache with cursor-based pagination policies                                                        |
+| **i18n**          | `src/i18n.ts` — react-i18next init, default lang `fr`, persisted to `localStorage`; `fr.json` + `en.json` populated with nav + auth + dashboard keys                                                 |
+| **AuthContext**   | `src/contexts/AuthContext.tsx` — `login()` calls GraphQL mutation, JWT decoded client-side for `companySlug`; state + localStorage persisted (`cashflow_token`, `cashflow_user`, `cashflow_company`) |
+| **UIContext**     | `src/contexts/UIContext.tsx` — `language`, `setLanguage` (persisted), `sidebarOpen`                                                                                                                  |
+| **Router**        | `src/App.tsx` — `createBrowserRouter`, all 10 routes under `/:companySlug/*`, unauthenticated redirect to `/login`                                                                                   |
+| **Layout**        | `src/components/Layout/` — auth guard + Sidebar + Outlet                                                                                                                                             |
+| **Sidebar**       | `src/components/Layout/Sidebar.tsx` — icon-only dark navy (~56px), inline SVGs, NavLink active state with blue left border, user avatar initials                                                     |
+| **Login page**    | `src/pages/Login/` — company slug + email + password form, error display                                                                                                                             |
+| **Dashboard**     | `src/pages/Dashboard/` — full implementation: KPI cards, outstanding breakdown, DSO + risk rate trend cards with sparkline bar charts (Recharts), top debtors list, aging balance chart              |
+| **Page stubs**    | Workflows, WorkflowDetail, Customers, CustomerDetail, Invoices, Actions, Payments, Bank — all scaffolded, ready to implement                                                                         |
 
 ### 🔲 To Do — Frontend
 
-| Area | What needs to be built |
-|---|---|
-| **Workflows** | `src/pages/Workflows/` — list + detail with action sequence editor |
-| **Customers** | `src/pages/Customers/` — paginated list + customer detail (invoices, action history) |
-| **Invoices** | `src/pages/Invoices/` — paginated list with status filters, invoice detail |
-| **Actions** | `src/pages/Actions/` — To Do / All views, action send/pause/ignore |
-| **Payments** | `src/pages/Payments/` — paginated list with filters |
-| **Bank** | `src/pages/Bank/` — transaction list, reconciliation suggestions |
-| **GraphQL queries** | Remaining pages in `src/graphql/queries/` |
-| **GraphQL mutations** | In `src/graphql/mutations/` |
-| **Custom hooks** | `useInvoices`, `useDebtors`, `useWorkflows`, etc. |
-| **Tests** | RTL tests for key components and hooks |
+| Area                  | What needs to be built                                                               |
+| --------------------- | ------------------------------------------------------------------------------------ |
+| **Workflows**         | `src/pages/Workflows/` — list + detail with action sequence editor                   |
+| **Customers**         | `src/pages/Customers/` — paginated list + customer detail (invoices, action history) |
+| **Invoices**          | `src/pages/Invoices/` — paginated list with status filters, invoice detail           |
+| **Actions**           | `src/pages/Actions/` — To Do / All views, action send/pause/ignore                   |
+| **Payments**          | `src/pages/Payments/` — paginated list with filters                                  |
+| **Bank**              | `src/pages/Bank/` — transaction list, reconciliation suggestions                     |
+| **GraphQL queries**   | Remaining pages in `@/graphql/queries/`                                              |
+| **GraphQL mutations** | In `@/graphql/mutations/`                                                            |
+| **Custom hooks**      | `useInvoices`, `useDebtors`, `useWorkflows`, etc.                                    |
+| **Tests**             | RTL tests for key components and hooks                                               |
 
 ---
 
@@ -120,6 +120,7 @@ docker-compose up -d
 > Ports are remapped to avoid conflicts: Postgres → **5433**, Redis → **6380**
 
 Verify that services are running:
+
 ```bash
 docker-compose ps
 ```
@@ -161,33 +162,36 @@ The application will be available at: http://localhost:3333
 Three companies are available after seeding:
 
 ### Open Demo Inc. — B2B SaaS
-| Field | Value |
-|---|---|
-| URL | http://localhost:3333/open-demo |
-| Email | john.doe@open-demo.com |
-| Password | demo1234 |
+
+| Field    | Value                           |
+| -------- | ------------------------------- |
+| URL      | http://localhost:3333/open-demo |
+| Email    | john.doe@open-demo.com          |
+| Password | demo1234                        |
 
 ### Acme Finance — Financial Services
-| Field | Value |
-|---|---|
-| URL | http://localhost:3333/acme-finance |
-| Email | jane.smith@acme-finance.com |
-| Password | demo1234 |
+
+| Field    | Value                              |
+| -------- | ---------------------------------- |
+| URL      | http://localhost:3333/acme-finance |
+| Email    | jane.smith@acme-finance.com        |
+| Password | demo1234                           |
 
 ### Nord Supply — Distribution
-| Field | Value |
-|---|---|
-| URL | http://localhost:3333/nord-supply |
-| Email | marc.dupont@nord-supply.com |
-| Password | demo1234 |
+
+| Field    | Value                             |
+| -------- | --------------------------------- |
+| URL      | http://localhost:3333/nord-supply |
+| Email    | marc.dupont@nord-supply.com       |
+| Password | demo1234                          |
 
 **Seed data volumes:**
 
-| Company | Debtors | Invoices | Executions | Payments | Bank Txns |
-|---|---|---|---|---|---|
-| Open Demo Inc. | 500 | 850 | 417 | 435 | 220 |
-| Acme Finance | 200 | 400 | 200 | 206 | 110 |
-| Nord Supply | 150 | 300 | 150 | 147 | 85 |
+| Company        | Debtors | Invoices | Executions | Payments | Bank Txns |
+| -------------- | ------- | -------- | ---------- | -------- | --------- |
+| Open Demo Inc. | 500     | 850      | 417        | 435      | 220       |
+| Acme Finance   | 200     | 400      | 200        | 206      | 110       |
+| Nord Supply    | 150     | 300      | 150        | 147      | 85        |
 
 ---
 
@@ -293,19 +297,19 @@ Migrations live in `src/db/migrations/sqls/` as separate `.up.sql` / `.down.sql`
 
 ## Application Pages
 
-| Route | Description |
-|---|---|
-| `/:slug` | Company login page |
-| `/:slug/dashboard` | KPIs, DSO, risk rate, aging balance |
-| `/:slug/workflows` | Workflow list and configuration |
-| `/:slug/workflows/:id` | Workflow detail with its actions |
-| `/:slug/customers` | Debtor customer list |
-| `/:slug/customers/:id` | Customer detail |
-| `/:slug/invoices` | Invoice list with filters |
-| `/:slug/actions` | Actions to process (To Do) |
-| `/:slug/emails` | Sent email history |
-| `/:slug/payments` | Payment list |
-| `/:slug/bank` | Bank transactions and reconciliation |
+| Route                  | Description                          |
+| ---------------------- | ------------------------------------ |
+| `/:slug`               | Company login page                   |
+| `/:slug/dashboard`     | KPIs, DSO, risk rate, aging balance  |
+| `/:slug/workflows`     | Workflow list and configuration      |
+| `/:slug/workflows/:id` | Workflow detail with its actions     |
+| `/:slug/customers`     | Debtor customer list                 |
+| `/:slug/customers/:id` | Customer detail                      |
+| `/:slug/invoices`      | Invoice list with filters            |
+| `/:slug/actions`       | Actions to process (To Do)           |
+| `/:slug/emails`        | Sent email history                   |
+| `/:slug/payments`      | Payment list                         |
+| `/:slug/bank`          | Bank transactions and reconciliation |
 
 ---
 
@@ -347,10 +351,10 @@ VITE_API_URL=http://localhost:4040/graphql
 
 Available services:
 
-| Service | Host Port | Description |
-|---|---|---|
-| `postgres` | **5433** | PostgreSQL 16 database (remapped from 5432) |
-| `redis` | **6380** | Redis 7 — cache and BullMQ queues (remapped from 6379) |
+| Service    | Host Port | Description                                            |
+| ---------- | --------- | ------------------------------------------------------ |
+| `postgres` | **5433**  | PostgreSQL 16 database (remapped from 5432)            |
+| `redis`    | **6380**  | Redis 7 — cache and BullMQ queues (remapped from 6379) |
 
 > Ports are remapped to avoid conflicts with other local services.
 

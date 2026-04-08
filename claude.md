@@ -8,11 +8,11 @@ This file guides Claude Code in understanding the project, its conventions, and 
 
 Before generating any code, always consult these files:
 
-| Resource | Path | Content |
-|---|---|---|
-| PRD | `PRD.md` | Features, data model, architecture |
+| Resource       | Path                | Content                                      |
+| -------------- | ------------------- | -------------------------------------------- |
+| PRD            | `PRD.md`            | Features, data model, architecture           |
 | UI Screenshots | `docs/screenshots/` | 10 captures of the target interface (Upflow) |
-| SQL Schema | `docs/schema.sql` | Complete PostgreSQL schema with indexes |
+| SQL Schema     | `docs/schema.sql`   | Complete PostgreSQL schema with indexes      |
 
 Screenshots are the absolute visual reference for the frontend.
 Every React component must faithfully match what is visible in those captures.
@@ -73,6 +73,7 @@ cashflow/
 ## Code Conventions
 
 ### General
+
 - **Strict TypeScript**: `"strict": true` in all tsconfigs
 - **Naming**: camelCase for variables/functions, PascalCase for types/components, SCREAMING_SNAKE_CASE for constants
 - **Imports**: absolute from `src/` (no `../../..`)
@@ -80,6 +81,7 @@ cashflow/
 - **Comments**: in English, only to explain the "why", never the "what"
 
 ### Backend
+
 - One file per resolver (e.g. `invoices.resolver.ts`)
 - Resolvers contain no SQL logic — delegate to services
 - Services contain no HTTP/GraphQL logic
@@ -88,6 +90,7 @@ cashflow/
 - Name migrations: `YYYYMMDD_description.sql`
 
 ### Frontend
+
 - One folder per page: `pages/Dashboard/index.tsx` + `pages/Dashboard/Dashboard.test.tsx`
 - Components do not fetch data directly — use custom hooks
 - Custom hooks are in `hooks/` and prefixed with `use` (e.g. `useInvoices.ts`)
@@ -105,16 +108,16 @@ The `companyId` is injected into the GraphQL context from the JWT:
 ```typescript
 // Apollo Server context
 const context = ({ req }) => {
-  const token = req.headers.authorization?.split(' ')[1]
-  const payload = verifyToken(token)
-  return { companyId: payload.companyId, userId: payload.userId }
-}
+  const token = req.headers.authorization?.split(" ")[1];
+  const payload = verifyToken(token);
+  return { companyId: payload.companyId, userId: payload.userId };
+};
 
 // In every resolver — ALWAYS
 const invoices = await db.query(
-  'SELECT * FROM invoices WHERE company_id = $1',
-  [context.companyId]
-)
+  "SELECT * FROM invoices WHERE company_id = $1",
+  [context.companyId],
+);
 ```
 
 Never trust query parameters for tenant isolation — always use the JWT context.
@@ -140,6 +143,7 @@ email_templates   (id, company_id, name, subject, body, channel)
 ```
 
 Critical indexes to always respect:
+
 - `invoices`: partial index on `status IN ('due','overdue')`
 - `executions`: partial index on `next_run_at WHERE status = 'active'`
 
@@ -148,12 +152,15 @@ Critical indexes to always respect:
 ## BullMQ Queue
 
 ### `dunning` Queue
+
 - Named `dunning-queue`
 - Each job represents an action to execute for a given execution
 - Payload: `{ executionId, actionId, invoiceId, companyId }`
 
 ### Worker
+
 The worker follows this exact flow:
+
 1. Check idempotency in `action_events` (execution_id + action_id + result = 'sent')
 2. If already processed → skip + ack
 3. Verify the invoice is still unpaid (FOR UPDATE)
@@ -163,6 +170,7 @@ The worker follows this exact flow:
 7. Advance execution to the next step or status = 'completed'
 
 ### Scheduler
+
 - Runs every 60 seconds
 - Query: `SELECT * FROM executions WHERE status = 'active' AND next_run_at <= NOW()`
 - Enqueues each result into `dunning-queue` with jitter (0–5 min)
@@ -171,11 +179,11 @@ The worker follows this exact flow:
 
 ## Redis Cache
 
-| Key | Value | TTL |
-|---|---|---|
-| `dashboard:${companyId}` | serialized KPIs | 5 min |
-| `refresh:${userId}` | refresh token | 7 days |
-| `idempotency:${executionId}:${actionId}` | `1` | 24h |
+| Key                                      | Value           | TTL    |
+| ---------------------------------------- | --------------- | ------ |
+| `dashboard:${companyId}`                 | serialized KPIs | 5 min  |
+| `refresh:${userId}`                      | refresh token   | 7 days |
+| `idempotency:${executionId}:${actionId}` | `1`             | 24h    |
 
 Invalidate `dashboard:${companyId}` on every mutation that affects KPIs.
 
@@ -192,7 +200,7 @@ Invalidate `dashboard:${companyId}` on every mutation that affects KPIs.
 
 ## GraphQL — Conventions
 
-- **SDL first**: the schema is defined in `src/graphql/schema.graphql`
+- **SDL first**: the schema is defined in `@/graphql/schema.graphql`
 - **DataLoader required** for any field that loads a relation (avoid N+1)
 - **Pagination**: cursor-based for lists (not offset) — `{ edges, pageInfo }`
 - **Errors**: use `GraphQLError` with an explicit code (`UNAUTHORIZED`, `NOT_FOUND`, etc.)
@@ -212,6 +220,7 @@ Invalidate `dashboard:${companyId}` on every mutation that affects KPIs.
 ## Tests
 
 ### Backend
+
 ```bash
 cd packages/backend
 npm test              # all tests
@@ -220,12 +229,14 @@ npm run test:integration  # Supertest
 ```
 
 ### Frontend
+
 ```bash
 cd packages/frontend
 npm test              # Jest + RTL
 ```
 
 ### Conventions
+
 - One test file per source file: `invoices.resolver.test.ts`
 - Mocks: use `jest.mock()` for Postgres and Redis in unit tests
 - Integration tests use a separate test DB (variable `TEST_DATABASE_URL`)
@@ -235,6 +246,7 @@ npm test              # Jest + RTL
 ## Environment Variables
 
 ### Backend (`packages/backend/.env`)
+
 ```env
 NODE_ENV=development
 PORT=4000
@@ -246,6 +258,7 @@ JWT_REFRESH_SECRET=change_me_too
 ```
 
 ### Frontend (`packages/frontend/.env`)
+
 ```env
 VITE_API_URL=http://localhost:4000/graphql
 ```

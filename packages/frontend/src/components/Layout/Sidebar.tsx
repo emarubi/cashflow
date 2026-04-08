@@ -229,8 +229,8 @@ export default function Sidebar() {
     <aside className="flex flex-col w-14 min-h-screen bg-sidebar flex-shrink-0">
       {/* Logo */}
       <div className="flex items-center justify-center h-14 border-b border-white/5">
-        <div className="w-8 h-8 rounded-lg bg-sidebar-active flex items-center justify-center">
-          <span className="text-white font-bold text-sm">C</span>
+        <div className="w-8 h-8 rounded-full bg-sidebar-active/00 flex items-center justify-center">
+          <span className="text-white font-bold text-lg">$.</span>
         </div>
       </div>
 
@@ -245,7 +245,7 @@ export default function Sidebar() {
               [
                 "relative flex items-center justify-center w-10 h-10 rounded-lg transition-colors",
                 isActive
-                  ? "text-white bg-sidebar-active/20 before:absolute before:left-0 before:top-2 before:bottom-2 before:w-0.5 before:bg-sidebar-active before:-translate-x-2 before:rounded-full"
+                  ? "text-white bg-sidebar-active/80 before:absolute before:left-0 before:top-2 before:bottom-2 before:w-0.5 before:bg-sidebar-active before:-translate-x-2 before:rounded-full"
                   : "text-sidebar-icon hover:text-white hover:bg-sidebar-hover",
               ].join(" ")
             }

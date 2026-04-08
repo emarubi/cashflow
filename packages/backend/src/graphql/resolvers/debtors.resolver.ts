@@ -30,6 +30,18 @@ export const debtorResolvers = {
     workflowId:       (p: DebtorRow) => p.workflow_id,
     createdAt:        (p: DebtorRow) => p.created_at,
     updatedAt:        (p: DebtorRow) => p.updated_at,
+    outstandingAmount: (p: DebtorRow, _: unknown, ctx: ApolloContext) => {
+      const svc = new DebtorService(ctx.pool)
+      return svc.getOutstandingAmount(p.id, ctx.companyId)
+    },
+    avgPaymentDelayDays: (p: DebtorRow, _: unknown, ctx: ApolloContext) => {
+      const svc = new DebtorService(ctx.pool)
+      return svc.getAvgPaymentDelayDays(p.id, ctx.companyId)
+    },
+    lastContactedAt: (p: DebtorRow, _: unknown, ctx: ApolloContext) => {
+      const svc = new DebtorService(ctx.pool)
+      return svc.getLastContactedAt(p.id, ctx.companyId)
+    },
     assignedUser: (p: DebtorRow, _: unknown, ctx: ApolloContext) =>
       p.assigned_user_id ? ctx.loaders.userById.load(p.assigned_user_id) : null,
     workflow: (p: DebtorRow, _: unknown, ctx: ApolloContext) =>
