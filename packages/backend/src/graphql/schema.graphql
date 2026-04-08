@@ -382,6 +382,13 @@ input ApplyBankTransactionInput {
   appliedAmount: Float!
 }
 
+type WorkflowActionStats {
+  actionId:              ID!
+  performedActionsCount: Int!
+  openRate:              Float
+  collected:             Float!
+}
+
 type Query {
   dashboard: Dashboard!
   invoices(first: Int, after: String, filter: InvoicesFilterInput): InvoiceConnection!
@@ -390,6 +397,7 @@ type Query {
   debtor(id: ID!): Debtor!
   workflows: [Workflow!]!
   workflow(id: ID!): Workflow!
+  workflowActionStats(workflowId: ID!, startDate: DateTime!, endDate: DateTime!): [WorkflowActionStats!]!
   payments(first: Int, after: String, filter: PaymentsFilterInput): PaymentConnection!
   bankTransactions(first: Int, after: String, filter: BankTransactionsFilterInput): BankTransactionConnection!
   actionEvents(first: Int, after: String, filter: ActionEventsFilterInput): ActionEventConnection!

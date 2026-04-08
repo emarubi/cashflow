@@ -70,6 +70,34 @@ export class WorkflowService {
     return rows[0]
   }
 
+  async getActionStats(
+    workflowId: string,
+    companyId: string,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<{ action_id: string; performed_actions_count: number; open_rate: number | null; collected: number }[]> {
+    const { rows } = await this.pool.query(
+      `SELECT
+         ae.action_id,
+         COUNT(ae.id) FILTER (WHERE ae.result = 'sent')::int                          AS performed_actions_count,
+         COUNT(ae.id) FILTER (WHERE ae.result = 'sent')::float
+           / NULLIF(COUNT(ae.id) FILTER (WHERE ae.result IN ('sent', 'failed')), 0)   AS open_rate,
+         COALESCE(SUM(i.amount) FILTER (WHERE i.status = 'paid' AND ae.result = 'sent'), 0)
+                                                                                       AS collected
+       FROM action_events ae
+       JOIN executions e ON e.id  = ae.execution_id
+       JOIN workflows  w ON w.id  = e.workflow_id
+       JOIN invoices   i ON i.id  = e.invoice_id
+       WHERE w.id         = $1
+         AND w.company_id = $2
+         AND ae.triggered_at >= $3
+         AND ae.triggered_at <= $4
+       GROUP BY ae.action_id`,
+      [workflowId, companyId, startDate, endDate],
+    )
+    return rows
+  }
+
   async update(id: string, companyId: string, input: UpdateWorkflowInput): Promise<WorkflowRow | null> {
     const setClauses: string[] = ['updated_at = NOW()']
     const params: unknown[] = []

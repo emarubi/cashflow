@@ -178,12 +178,12 @@ export default function Sidebar() {
       label: t("nav.dashboard"),
       icon: <IconDashboard />,
     },
-    // {
-    //   key: "workflows",
-    //   path: `/${slug}/workflows`,
-    //   label: t("nav.workflows"),
-    //   icon: <IconWorkflow />,
-    // },
+    {
+      key: "workflows",
+      path: `/${slug}/workflows`,
+      label: t("nav.workflows"),
+      icon: <IconWorkflow />,
+    },
     {
       key: "customers",
       path: `/${slug}/customers`,

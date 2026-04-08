@@ -22,6 +22,26 @@ export const workflowResolvers = {
       if (!w) throw new GraphQLError('Workflow not found', { extensions: { code: 'NOT_FOUND' } })
       return w
     },
+    workflowActionStats: async (
+      _: unknown,
+      args: { workflowId: string; startDate: string; endDate: string },
+      ctx: ApolloContext,
+    ) => {
+      requireAuth(ctx)
+      const svc = new WorkflowService(ctx.pool)
+      const rows = await svc.getActionStats(
+        args.workflowId,
+        ctx.companyId,
+        new Date(args.startDate),
+        new Date(args.endDate),
+      )
+      return rows.map((r) => ({
+        actionId:              r.action_id,
+        performedActionsCount: r.performed_actions_count,
+        openRate:              r.open_rate,
+        collected:             r.collected,
+      }))
+    },
   },
   Mutation: {
     createWorkflow: async (_: unknown, args: { input: { name: string; minContactDelayDays?: number; firstActionLogic?: string; replyTo?: string; isActive?: boolean } }, ctx: ApolloContext) => {
