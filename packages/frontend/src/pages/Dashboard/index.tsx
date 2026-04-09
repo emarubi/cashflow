@@ -42,7 +42,7 @@ export default function DashboardPage() {
   const riskTrend = computeTrend(data.riskRateTrend)
 
   return (
-    <div className="p-6 space-y-5">
+    <div className="p-8 space-y-5 max-w-screen-xl mx-auto">
       {/* Row 1: greeting + 2 KPI cards */}
       <div className="grid grid-cols-3 gap-5">
         <GreetingBlock />

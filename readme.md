@@ -65,22 +65,26 @@ Web application for managing unpaid invoice dunning — a functional clone of Up
 | **Sidebar**       | `src/components/Layout/Sidebar.tsx` — icon-only dark navy (~56px), inline SVGs, NavLink active state with blue left border, user avatar initials                                                     |
 | **Login page**    | `src/pages/Login/` — company slug + email + password form, error display                                                                                                                             |
 | **Dashboard**     | `src/pages/Dashboard/` — full implementation: KPI cards, outstanding breakdown, DSO + risk rate trend cards with sparkline bar charts (Recharts), top debtors list, aging balance chart              |
-| **Page stubs**    | Workflows, WorkflowDetail, Customers, CustomerDetail, Invoices, Actions, Payments, Bank — all scaffolded, ready to implement                                                                         |
+| **Page stubs**    | Invoices, Actions, Payments, Bank — scaffolded, ready to implement                                                                                                                                   |
+| **Workflows list** | `src/pages/Workflows/` — paginated table with type badge, metrics (customers, actions, open rate, outstanding, DSO) |
+| **Workflow detail** | `src/pages/Workflows/WorkflowDetail/` — editable title, settings card (min delay, reply-to, first action logic), analytics date filter, action sequence section with per-action stats |
+| **Customers list** | `src/pages/Customers/` — paginated table with search + debounce, "Add customers" dropdown (create/import/history), rating badge, assigned user, workflow, outstanding amount, total footer |
+| **Customer detail** | `src/pages/Customers/CustomerDetail/` — two-column layout: info card (outstanding, avg delay, last contacted, assigned users, workflow + pause), group entities card, payment method card (with sub-tabs); right panel tabs: Invoices, Payments, Credit Notes, Contacts, Timeline, Details |
+| **i18n (customers)** | ~50 keys added to `fr.json` + `en.json` covering both pages |
+| **GraphQL queries** | `customers.ts`, `customer.ts`, `customerInvoices.ts`, `customerPayments.ts`, `customerTimeline.ts` |
+| **Hooks** | `useDebtors`, `useDebtor`, `useDebtorInvoices`, `useDebtorPayments`, `useDebtorTimeline` |
+| **Backend extensions** | `Debtor` type: `outstandingAmount`, `avgPaymentDelayDays`, `lastContactedAt`; `ActionEventsFilterInput`: `debtorId` filter |
 
 ### 🔲 To Do — Frontend
 
-| Area                  | What needs to be built                                                               |
-| --------------------- | ------------------------------------------------------------------------------------ |
-| **Workflows**         | `src/pages/Workflows/` — list + detail with action sequence editor                   |
-| **Customers**         | `src/pages/Customers/` — paginated list + customer detail (invoices, action history) |
-| **Invoices**          | `src/pages/Invoices/` — paginated list with status filters, invoice detail           |
-| **Actions**           | `src/pages/Actions/` — To Do / All views, action send/pause/ignore                   |
-| **Payments**          | `src/pages/Payments/` — paginated list with filters                                  |
-| **Bank**              | `src/pages/Bank/` — transaction list, reconciliation suggestions                     |
-| **GraphQL queries**   | Remaining pages in `@/graphql/queries/`                                              |
-| **GraphQL mutations** | In `@/graphql/mutations/`                                                            |
-| **Custom hooks**      | `useInvoices`, `useDebtors`, `useWorkflows`, etc.                                    |
-| **Tests**             | RTL tests for key components and hooks                                               |
+| Area                  | What needs to be built                                                                                         |
+| --------------------- | -------------------------------------------------------------------------------------------------------------- |
+| **Invoices**          | `src/pages/Invoices/` — paginated list with status filters (due / overdue / in_dispute), Invoices / Credit Notes tabs |
+| **Actions**           | `src/pages/Actions/` — To Do / All views, action detail with pre-filled email, send/pause/ignore               |
+| **Payments**          | `src/pages/Payments/` — paginated list with filters (status, customer)                                         |
+| **Bank**              | `src/pages/Bank/` — transaction list, reconciliation suggestions, manual apply                                 |
+| **GraphQL mutations** | `@/graphql/mutations/` — pauseExecution, resumeExecution, createWorkflow, applyBankTransaction                 |
+| **Tests**             | RTL tests for key components and hooks                                                                         |
 
 ---
 
@@ -240,8 +244,8 @@ cashflow/
 │       │   ├── pages/
 │       │   │   ├── Login/            # ✅ login form (slug + email + password)
 │       │   │   ├── Dashboard/        # ✅ KPIs, outstanding, DSO, risk rate, debtors, aging balance
-│       │   │   ├── Workflows/        # stub
-│       │   │   ├── Customers/        # stub
+│       │   │   ├── Workflows/        # ✅ list table + WorkflowDetail/ (settings, analytics, action sequence)
+│       │   │   ├── Customers/        # ✅ paginated list with search + CustomerDetail/ (6-tab detail view)
 │       │   │   ├── Invoices/         # stub
 │       │   │   ├── Actions/          # stub
 │       │   │   ├── Payments/         # stub
@@ -251,11 +255,14 @@ cashflow/
 │       │   │   └── UIContext.tsx     # ✅ language, sidebarOpen
 │       │   ├── graphql/
 │       │   │   ├── client.ts         # ✅ ApolloClient, authLink, errorLink
-│       │   │   └── queries/
-│       │   │       └── dashboard.ts  # ✅ GET_DASHBOARD query
-│       │   ├── hooks/
-│       │   │   └── useDashboard.ts   # ✅
-│       │   ├── locales/              # ✅ fr.json + en.json (nav + auth + dashboard keys)
+│       │   │   └── queries/          # ✅ dashboard, workflows, workflow, workflowActionStats,
+│       │   │                         #    customers, customer, customerInvoices,
+│       │   │                         #    customerPayments, customerTimeline
+│       │   ├── hooks/                # ✅ useDashboard, useWorkflows, useWorkflow,
+│       │   │                         #    useWorkflowActionStats, useUpdateWorkflow,
+│       │   │                         #    useDebtors, useDebtor, useDebtorInvoices,
+│       │   │                         #    useDebtorPayments, useDebtorTimeline
+│       │   ├── locales/              # ✅ fr.json + en.json (nav + auth + dashboard + workflows + customers)
 │       │   ├── i18n.ts               # ✅ react-i18next init
 │       │   └── App.tsx               # ✅ createBrowserRouter, all 10 routes
 │       ├── index.html                # ✅

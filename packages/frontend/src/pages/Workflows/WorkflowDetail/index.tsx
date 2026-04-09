@@ -36,7 +36,7 @@ export default function WorkflowDetailPage() {
   }
 
   return (
-    <div className="p-6 space-y-5">
+    <div className="p-8 max-w-screen-xl mx-auto space-y-5">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-gray-400">
         <Link to={`/${slug}/workflows`} className="hover:text-gray-600">

@@ -7,7 +7,7 @@ export default function WorkflowsPage() {
   const { data, loading, error } = useWorkflows()
 
   return (
-    <div className="p-6">
+    <div className="p-8 max-w-screen-xl mx-auto">
       {/* Header */}
       <div className="flex items-start justify-between mb-1">
         <h1 className="text-xl font-semibold text-gray-900">{t('nav.workflows')}</h1>

@@ -29,7 +29,7 @@ export default function CustomerDetailPage() {
   }
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="p-8 max-w-screen-xl mx-auto flex flex-col h-full overflow-hidden">
       {/* Page header */}
       <CustomerDetailHeader name={debtor.name} />
 
