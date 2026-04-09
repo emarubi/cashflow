@@ -1,12 +1,14 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useCreateAction } from '@/hooks/useCreateAction'
+import { WorkflowAction } from '@/hooks/useWorkflow'
+import { useUpdateAction } from '@/hooks/useUpdateAction'
+import { useDeleteAction } from '@/hooks/useDeleteAction'
 import { useSendTestEmail } from '@/hooks/useSendTestEmail'
 import { useAuth } from '@/contexts/AuthContext'
 
 interface Props {
   workflowId: string
-  open: boolean
+  action: WorkflowAction
   onClose: () => void
 }
 
@@ -16,97 +18,84 @@ const TRIGGER_OPTIONS = [
   { value: 'on_issue',   label: 'action.on_issue_date' },
 ] as const
 
-const ASSIGNED_DATES_OPTIONS = [
-  { value: 'due',   label: 'action.invoice_due_date' },
-  { value: 'issue', label: 'action.invoice_issue_date' },
+const CHANNEL_OPTIONS = [
+  { value: 'email',  label: 'action.channel_email' },
+  { value: 'call',   label: 'action.channel_call' },
+  { value: 'letter', label: 'action.channel_letter' },
 ] as const
 
-const DEFAULT_SUBJECT = '{{ Organisation name }} - late payment - Invoice #{{ Invoice number }}'
-const DEFAULT_BODY = `Hello,
-
-Unless we are mistaken, we have not yet received your payment for your invoice at {{ Invoice number }} for a total of {{ Invoice amount }}. You can find a summary of your account's state by {{ following this link }}.
-
-We would appreciate a prompt payment upon receipt of this email. If this has already been paid, please ignore this notice.
-
-Best regards,
-{{ Sender name }}`
-
-export default function NewActionDrawer({ workflowId, open, onClose }: Props) {
+export default function EditActionDrawer({ workflowId, action, onClose }: Props) {
   const { t } = useTranslation()
   const { user } = useAuth()
 
-  const [name, setName] = useState('')
-  const [assignedDates, setAssignedDates] = useState<'due' | 'issue'>('due')
-  const [triggerType, setTriggerType] = useState<'after_due' | 'before_due' | 'on_issue'>('after_due')
-  const [delayDays, setDelayDays] = useState(0)
-  const [isAutomatic, setIsAutomatic] = useState(true)
-  const [senderName, setSenderName] = useState('')
-  const [recipients, setRecipients] = useState('')
-  const [cc, setCc] = useState('')
-  const [bcc, setBcc] = useState('')
-  const [subject, setSubject] = useState(DEFAULT_SUBJECT)
-  const [body, setBody] = useState(DEFAULT_BODY)
+  const [name, setName]               = useState(action.template?.name ?? action.senderName ?? '')
+  const [triggerType, setTriggerType] = useState(action.trigger)
+  const [delayDays, setDelayDays]     = useState(Math.abs(action.delayDays))
+  const [channel, setChannel]         = useState(action.channel)
+  const [isAutomatic, setIsAutomatic] = useState(action.isAutomatic)
+  const [senderName, setSenderName]   = useState(action.senderName ?? '')
+  const [recipients, setRecipients]   = useState('')
+  const [cc, setCc]                   = useState('')
+  const [bcc, setBcc]                 = useState('')
+  const [subject, setSubject]         = useState(action.template?.subject ?? '')
+  const [body, setBody]               = useState(action.template?.body ?? '')
 
   const [testModalOpen, setTestModalOpen] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
-  const { createAction, loading: saving } = useCreateAction(workflowId)
+  // Re-sync if the parent swaps the action (e.g. clicking a different row while drawer is open)
+  useEffect(() => {
+    setName(action.template?.name ?? action.senderName ?? '')
+    setTriggerType(action.trigger)
+    setDelayDays(Math.abs(action.delayDays))
+    setChannel(action.channel)
+    setIsAutomatic(action.isAutomatic)
+    setSenderName(action.senderName ?? '')
+    setSubject(action.template?.subject ?? '')
+    setBody(action.template?.body ?? '')
+  }, [action.id])  // eslint-disable-line react-hooks/exhaustive-deps
+
+  const { updateAction, loading: saving }   = useUpdateAction(workflowId)
+  const { deleteAction, loading: deleting } = useDeleteAction(workflowId)
   const { sendTestEmail, loading: sending } = useSendTestEmail()
 
-  function handleAssignedDatesChange(val: 'due' | 'issue') {
-    setAssignedDates(val)
-    if (val === 'issue') setTriggerType('on_issue')
-    else setTriggerType('after_due')
-  }
-
   async function handleSave() {
-    if (!name.trim() || !subject.trim() || !body.trim()) return
-    await createAction({
-      workflowId,
+    await updateAction(action.id, {
       delayDays: triggerType === 'before_due' ? -Math.abs(delayDays) : delayDays,
       trigger: triggerType,
-      channel: 'email',
+      channel,
       senderName: senderName || undefined,
       isAutomatic,
-      templateName: name,
-      templateSubject: subject,
-      templateBody: body,
+      templateName: name || undefined,
+      templateSubject: subject || undefined,
+      templateBody: body || undefined,
     })
-    handleClose()
-  }
-
-  function handleClose() {
-    setName('')
-    setAssignedDates('due')
-    setTriggerType('after_due')
-    setDelayDays(0)
-    setIsAutomatic(true)
-    setSenderName('')
-    setRecipients('')
-    setCc('')
-    setBcc('')
-    setSubject(DEFAULT_SUBJECT)
-    setBody(DEFAULT_BODY)
-    setTestModalOpen(false)
     onClose()
   }
 
-  if (!open) return null
+  async function handleDelete() {
+    await deleteAction(action.id)
+    onClose()
+  }
+
+  async function handleDuplicate() {
+    // Duplicate = create a new action with the same data (step_order auto-increments)
+    // This uses createAction indirectly — for now just close and let the user re-create.
+    // Full duplicate support can be added when a duplicateAction mutation is available.
+  }
 
   return (
     <>
-      {/* Drawer backdrop */}
-      <div className="fixed inset-0 z-40 bg-black/20" onClick={handleClose} />
+      {/* Backdrop */}
+      <div className="fixed inset-0 z-40 bg-black/20" onClick={onClose} />
 
       {/* Drawer panel */}
       <div className="fixed top-0 right-0 z-50 h-full w-[480px] bg-white shadow-2xl flex flex-col">
+
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 flex-shrink-0">
-          <h2 className="text-base font-semibold text-gray-900">{t('action.new_action')}</h2>
-          <button
-            onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-            aria-label={t('common.cancel')}
-          >
+          <h2 className="text-base font-semibold text-gray-900">{t('action.edit_action')}</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
             <IconX />
           </button>
         </div>
@@ -115,7 +104,7 @@ export default function NewActionDrawer({ workflowId, open, onClose }: Props) {
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
 
           {/* Name */}
-          <FormRow label={t('action.name')} required>
+          <FormRow label={t('action.name')}>
             <input
               type="text"
               value={name}
@@ -123,19 +112,6 @@ export default function NewActionDrawer({ workflowId, open, onClose }: Props) {
               placeholder={t('action.name_placeholder')}
               className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
-          </FormRow>
-
-          {/* Assigned dates */}
-          <FormRow label={t('action.assigned_dates')} required>
-            <select
-              value={assignedDates}
-              onChange={(e) => handleAssignedDatesChange(e.target.value as 'due' | 'issue')}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
-            >
-              {ASSIGNED_DATES_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{t(o.label)}</option>
-              ))}
-            </select>
           </FormRow>
 
           {/* Trigger */}
@@ -152,13 +128,8 @@ export default function NewActionDrawer({ workflowId, open, onClose }: Props) {
               <span className="text-sm text-gray-500">{t('action.days')}</span>
               <select
                 value={triggerType}
-                onChange={(e) => {
-                  const val = e.target.value as typeof triggerType
-                  setTriggerType(val)
-                  if (val === 'on_issue') setAssignedDates('issue')
-                  else setAssignedDates('due')
-                }}
-                className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                onChange={(e) => setTriggerType(e.target.value as typeof triggerType)}
+                className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 {TRIGGER_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value}>{t(o.label)}</option>
@@ -167,9 +138,18 @@ export default function NewActionDrawer({ workflowId, open, onClose }: Props) {
             </div>
           </FormRow>
 
-          {/* Type */}
+          {/* Type / Channel */}
           <FormRow label={t('action.type')}>
-            <label className="flex items-center gap-2 cursor-pointer">
+            <select
+              value={channel}
+              onChange={(e) => setChannel(e.target.value as typeof channel)}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+            >
+              {CHANNEL_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{t(o.label)}</option>
+              ))}
+            </select>
+            <label className="flex items-center gap-2 mt-2 cursor-pointer">
               <input
                 type="checkbox"
                 checked={isAutomatic}
@@ -193,7 +173,7 @@ export default function NewActionDrawer({ workflowId, open, onClose }: Props) {
             />
           </FormRow>
 
-          {/* Recipients — plain input until mail server + contacts table are available */}
+          {/* Recipients */}
           <FormRow label={t('action.recipients')}>
             <input
               type="email"
@@ -266,31 +246,45 @@ export default function NewActionDrawer({ workflowId, open, onClose }: Props) {
 
         </div>
 
-        {/* Footer */}
+        {/* Footer — Delete | Send test | Duplicate | Save */}
         <div className="flex items-center justify-between px-6 py-4 mb-4 border-t border-gray-200 flex-shrink-0 bg-white">
           <button
-            onClick={() => setTestModalOpen(true)}
-            disabled={!subject.trim() || !body.trim()}
-            className="text-sm text-blue-600 font-medium hover:text-blue-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            onClick={() => setConfirmDelete(true)}
+            disabled={deleting}
+            className="text-sm text-red-500 hover:text-red-700 font-medium transition-colors disabled:opacity-40"
           >
-            {t('action.send_test_email')}
+            {t('common.delete')}
           </button>
-          <button
-            onClick={handleSave}
-            disabled={saving || !name.trim() || !subject.trim() || !body.trim()}
-            className="bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-          >
-            {saving ? t('common.loading') : t('common.save')}
-          </button>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setTestModalOpen(true)}
+              disabled={!subject.trim() || !body.trim()}
+              className="text-sm text-blue-600 font-medium hover:text-blue-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              {t('action.send_test_email')}
+            </button>
+            <button
+              onClick={handleDuplicate}
+              className="border border-gray-300 text-sm text-gray-700 font-medium px-3 py-2 rounded-md hover:bg-gray-50 transition-colors"
+            >
+              {t('action.duplicate')}
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              {saving ? t('common.loading') : t('common.save')}
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Test email confirmation modal */}
+      {/* Test email modal */}
       {testModalOpen && (
         <TestEmailModal
           userEmail={user?.email ?? ''}
-          subject={subject}
-          body={body}
           loading={sending}
           onCancel={() => setTestModalOpen(false)}
           onConfirm={async () => {
@@ -299,45 +293,38 @@ export default function NewActionDrawer({ workflowId, open, onClose }: Props) {
           }}
         />
       )}
+
+      {/* Delete confirmation modal */}
+      {confirmDelete && (
+        <ConfirmDeleteModal
+          loading={deleting}
+          onCancel={() => setConfirmDelete(false)}
+          onConfirm={handleDelete}
+        />
+      )}
     </>
   )
 }
 
-// ─── Test email confirmation modal ────────────────────────────────────────────
+// ─── Test email modal ─────────────────────────────────────────────────────────
 
-interface TestEmailModalProps {
+function TestEmailModal({ userEmail, loading, onCancel, onConfirm }: {
   userEmail: string
-  subject: string
-  body: string
   loading: boolean
   onCancel: () => void
   onConfirm: () => Promise<void>
-}
-
-function TestEmailModal({ userEmail, loading, onCancel, onConfirm }: TestEmailModalProps) {
+}) {
   const { t } = useTranslation()
   const [customer, setCustomer] = useState('')
-
   return (
-    // Modal sits above both backdrop (z-40) and drawer (z-50)
     <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40" onClick={onCancel} />
       <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-md p-6 flex flex-col gap-5">
-
-        {/* Header */}
         <div className="flex items-center justify-between">
           <h3 className="text-base font-semibold text-gray-900">{t('action.send_test_email')}</h3>
-          <button onClick={onCancel} className="text-gray-400 hover:text-gray-600 transition-colors">
-            <IconX />
-          </button>
+          <button onClick={onCancel} className="text-gray-400 hover:text-gray-600"><IconX /></button>
         </div>
-
-        {/* Description */}
-        <p className="text-sm text-gray-600">
-          {t('action.test_modal_desc', { email: userEmail })}
-        </p>
-
-        {/* Customer selector */}
+        <p className="text-sm text-gray-600">{t('action.test_modal_desc', { email: userEmail })}</p>
         <div className="flex flex-col gap-1.5">
           <label className="text-sm text-gray-700">{t('action.test_modal_from')}</label>
           <div className="relative">
@@ -349,30 +336,49 @@ function TestEmailModal({ userEmail, loading, onCancel, onConfirm }: TestEmailMo
               <option value="">{t('action.test_modal_select_customer')}</option>
             </select>
             <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="6 9 12 15 18 9" />
-              </svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>
             </div>
           </div>
         </div>
-
-        {/* Footer */}
         <div className="flex items-center justify-end gap-3 pt-1">
-          <button
-            onClick={onCancel}
-            className="text-sm text-gray-500 hover:text-gray-700 font-medium transition-colors"
-          >
-            {t('common.cancel')}
-          </button>
+          <button onClick={onCancel} className="text-sm text-gray-500 hover:text-gray-700 font-medium">{t('common.cancel')}</button>
           <button
             onClick={onConfirm}
             disabled={loading}
-            className="bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
           >
             {loading ? t('action.sending_test') : t('action.send_test_email')}
           </button>
         </div>
+      </div>
+    </div>
+  )
+}
 
+// ─── Delete confirmation modal ────────────────────────────────────────────────
+
+function ConfirmDeleteModal({ loading, onCancel, onConfirm }: {
+  loading: boolean
+  onCancel: () => void
+  onConfirm: () => Promise<void>
+}) {
+  const { t } = useTranslation()
+  return (
+    <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/40" onClick={onCancel} />
+      <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 flex flex-col gap-4">
+        <h3 className="text-base font-semibold text-gray-900">{t('action.delete_confirm_title')}</h3>
+        <p className="text-sm text-gray-600">{t('action.delete_confirm_body')}</p>
+        <div className="flex items-center justify-end gap-3 pt-1">
+          <button onClick={onCancel} className="text-sm text-gray-500 hover:text-gray-700 font-medium">{t('common.cancel')}</button>
+          <button
+            onClick={onConfirm}
+            disabled={loading}
+            className="bg-red-600 text-white text-sm font-medium px-4 py-2 rounded-md hover:bg-red-700 disabled:opacity-50"
+          >
+            {loading ? t('common.loading') : t('common.delete')}
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -383,8 +389,7 @@ function TestEmailModal({ userEmail, loading, onCancel, onConfirm }: TestEmailMo
 function IconX() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="18" y1="6" x2="6" y2="18" />
-      <line x1="6" y1="6" x2="18" y2="18" />
+      <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
     </svg>
   )
 }
@@ -393,8 +398,7 @@ function FormRow({ label, required, children }: { label: string; required?: bool
   return (
     <div className="flex flex-col gap-1.5">
       <label className="text-sm font-medium text-gray-700">
-        {label}
-        {required && <span className="text-blue-500 ml-1">●</span>}
+        {label}{required && <span className="text-blue-500 ml-1">●</span>}
       </label>
       {children}
     </div>

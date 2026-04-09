@@ -20,6 +20,17 @@ interface CreateActionInput {
   templateBody: string
 }
 
+interface UpdateActionInput {
+  delayDays?: number
+  trigger?: string
+  channel?: string
+  senderName?: string
+  isAutomatic?: boolean
+  templateName?: string
+  templateSubject?: string
+  templateBody?: string
+}
+
 interface SendTestEmailInput {
   to: string
   subject: string
@@ -32,6 +43,18 @@ export const actionResolvers = {
       requireAuth(ctx)
       const svc = new ActionService(ctx.pool)
       return svc.create(ctx.companyId, args.input)
+    },
+    updateAction: async (_: unknown, args: { id: string; input: UpdateActionInput }, ctx: ApolloContext) => {
+      requireAuth(ctx)
+      const svc = new ActionService(ctx.pool)
+      const action = await svc.update(args.id, ctx.companyId, args.input)
+      if (!action) throw new GraphQLError('Action not found', { extensions: { code: 'NOT_FOUND' } })
+      return action
+    },
+    deleteAction: async (_: unknown, args: { id: string }, ctx: ApolloContext) => {
+      requireAuth(ctx)
+      const svc = new ActionService(ctx.pool)
+      return svc.delete(args.id, ctx.companyId)
     },
     sendTestEmail: async (_: unknown, args: { input: SendTestEmailInput }, ctx: ApolloContext) => {
       requireAuth(ctx)

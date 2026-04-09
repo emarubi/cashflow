@@ -3,6 +3,9 @@ export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
+      zIndex: {
+        60: '60',
+      },
       colors: {
         sidebar: '#1a1f2e',
         'sidebar-hover': '#242938',

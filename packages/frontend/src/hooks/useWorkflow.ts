@@ -1,10 +1,11 @@
 import { useQuery } from '@apollo/client'
 import { GET_WORKFLOW } from '@/graphql/queries/workflow'
 
-interface EmailTemplate {
+export interface ActionTemplate {
   id: string
   name: string
   subject: string
+  body: string
 }
 
 export interface WorkflowAction {
@@ -14,7 +15,8 @@ export interface WorkflowAction {
   channel: 'email' | 'call' | 'letter'
   delayDays: number
   senderName: string | null
-  template: EmailTemplate | null
+  isAutomatic: boolean
+  template: ActionTemplate | null
 }
 
 export interface WorkflowDetail {

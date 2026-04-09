@@ -74,7 +74,7 @@
   "workflow.on_issue_date": "On issue date",
   "workflow.section_issued": "Invoice Issued",
   "workflow.section_due": "Invoice due",
-  "workflow.new_action": "+ New action",
+  "workflow.new_action": "New action",
   "workflow.col_actions": "Performed actions",
   "workflow.col_open_rate": "Open rate",
   "workflow.col_collected": "Collected",
@@ -238,7 +238,18 @@
   "action.subject": "Subject",
   "action.message": "Message",
   "action.insert_variable": "Insert variable",
+  "action.recipients_placeholder": "Recipient email address",
   "action.send_test_email": "Send me a test email",
   "action.sending_test": "Sending…",
-  "action.test_sent": "Test email sent ✓"
+  "action.test_sent": "Test email sent ✓",
+  "action.test_modal_desc": "Send a test email to {{email}} to see what your customers will receive.",
+  "action.test_modal_from": "The email will be sent with information from:",
+  "action.test_modal_select_customer": "Select a customer",
+  "action.edit_action": "Edit action",
+  "action.channel_email": "Email",
+  "action.channel_call": "Call",
+  "action.channel_letter": "Letter",
+  "action.duplicate": "Duplicate",
+  "action.delete_confirm_title": "Delete this action?",
+  "action.delete_confirm_body": "This action will be permanently deleted. This cannot be undone."
 }

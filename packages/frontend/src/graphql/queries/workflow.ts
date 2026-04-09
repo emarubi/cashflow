@@ -16,10 +16,12 @@ export const GET_WORKFLOW = gql`
         channel
         delayDays
         senderName
+        isAutomatic
         template {
           id
           name
           subject
+          body
         }
       }
     }

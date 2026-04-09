@@ -74,7 +74,7 @@
   "workflow.on_issue_date": "À la date d'émission",
   "workflow.section_issued": "Facture émise",
   "workflow.section_due": "Facture due",
-  "workflow.new_action": "+ Nouvelle action",
+  "workflow.new_action": "Nouvelle action",
   "workflow.col_actions": "Actions réalisées",
   "workflow.col_open_rate": "Taux d'ouverture",
   "workflow.col_collected": "Collecté",
@@ -238,7 +238,18 @@
   "action.subject": "Objet",
   "action.message": "Message",
   "action.insert_variable": "Insérer une variable",
+  "action.recipients_placeholder": "Adresse email du destinataire",
   "action.send_test_email": "M'envoyer un email de test",
   "action.sending_test": "Envoi en cours…",
-  "action.test_sent": "Email de test envoyé ✓"
+  "action.test_sent": "Email de test envoyé ✓",
+  "action.test_modal_desc": "Envoyer un email de test à {{email}} pour voir ce que vos clients recevront.",
+  "action.test_modal_from": "L'email sera envoyé avec les informations de :",
+  "action.test_modal_select_customer": "Sélectionner un client",
+  "action.edit_action": "Modifier l'action",
+  "action.channel_email": "Email",
+  "action.channel_call": "Appel",
+  "action.channel_letter": "Courrier",
+  "action.duplicate": "Dupliquer",
+  "action.delete_confirm_title": "Supprimer cette action ?",
+  "action.delete_confirm_body": "Cette action sera définitivement supprimée. Cette opération est irréversible."
 }

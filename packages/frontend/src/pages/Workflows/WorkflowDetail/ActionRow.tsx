@@ -5,6 +5,7 @@ import { ActionStats } from '@/hooks/useWorkflowActionStats'
 interface ActionRowProps {
   action: WorkflowAction
   stats: ActionStats | undefined
+  onClick: () => void
 }
 
 function IconEmail() {
@@ -41,7 +42,7 @@ function formatPercent(n: number): string {
   return `${Math.round(n * 100)}%`
 }
 
-export default function ActionRow({ action, stats }: ActionRowProps) {
+export default function ActionRow({ action, stats, onClick }: ActionRowProps) {
   const { t } = useTranslation()
   const na = '—'
 
@@ -67,7 +68,10 @@ export default function ActionRow({ action, stats }: ActionRowProps) {
   }
 
   return (
-    <div className="flex items-center gap-4 py-3 px-2 rounded-lg hover:bg-gray-50 transition-colors">
+    <div
+      onClick={onClick}
+      className="flex items-center gap-4 py-3 px-2 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+    >
       {/* Channel icon */}
       <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${channelBg}`}>
         {channelIcon}

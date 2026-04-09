@@ -443,6 +443,17 @@ input CreateActionInput {
   templateBody: String!
 }
 
+input UpdateActionInput {
+  delayDays: Int
+  trigger: ActionTrigger
+  channel: ActionChannel
+  senderName: String
+  isAutomatic: Boolean
+  templateName: String
+  templateSubject: String
+  templateBody: String
+}
+
 input SendTestEmailInput {
   to: String!
   subject: String!
@@ -483,6 +494,8 @@ type Mutation {
   createWorkflow(input: CreateWorkflowInput!): Workflow!
   updateWorkflow(id: ID!, input: UpdateWorkflowInput!): Workflow!
   createAction(input: CreateActionInput!): Action!
+  updateAction(id: ID!, input: UpdateActionInput!): Action!
+  deleteAction(id: ID!): Boolean!
   sendTestEmail(input: SendTestEmailInput!): Boolean!
   applyBankTransaction(input: ApplyBankTransactionInput!): BankTransaction!
 }
