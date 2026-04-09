@@ -24,6 +24,13 @@ export const executionResolvers = {
       await invalidateDashboardCache(ctx.companyId)
       return e
     },
+    ignoreAction: async (_: unknown, args: { executionId: string; actionId: string }, ctx: ApolloContext) => {
+      requireAuth(ctx)
+      const svc = new ExecutionService(ctx.pool)
+      const event = await svc.ignore(args.executionId, args.actionId, ctx.companyId)
+      await invalidateDashboardCache(ctx.companyId)
+      return event
+    },
   },
   Execution: {
     invoiceId:       (p: ExecutionRow) => p.invoice_id,

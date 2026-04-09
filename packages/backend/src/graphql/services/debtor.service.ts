@@ -1,10 +1,13 @@
 import { Pool } from 'pg'
 import { DebtorRow } from '@graphql/dataloaders'
 
+type DebtorSort = 'OUTSTANDING_DESC' | 'OVERDUE_DESC' | 'NEXT_ACTION_DATE_ASC'
+
 interface DebtorFilter {
   rating?: string
   workflowId?: string
   search?: string
+  hasActiveExecution?: boolean
 }
 
 interface DebtorConnection {
@@ -36,52 +39,80 @@ export class DebtorService {
     first = 20,
     after?: string,
     filter?: DebtorFilter,
+    sort?: DebtorSort,
   ): Promise<DebtorConnection> {
     const params: unknown[] = [companyId]
-    const conditions: string[] = ['company_id = $1']
+    const conditions: string[] = ['d.company_id = $1']
     let paramIdx = 2
 
-    if (after) {
+    // Cursor pagination only applies when no custom sort is requested
+    if (!sort && after) {
       const { createdAt, id } = decodeCursor(after)
-      conditions.push(`(created_at, id) < ($${paramIdx}::timestamptz, $${paramIdx + 1})`)
+      conditions.push(`(d.created_at, d.id) < ($${paramIdx}::timestamptz, $${paramIdx + 1})`)
       params.push(createdAt, id)
       paramIdx += 2
     }
     if (filter?.rating) {
-      conditions.push(`rating = $${paramIdx}`)
+      conditions.push(`d.rating = $${paramIdx}`)
       params.push(filter.rating)
       paramIdx++
     }
     if (filter?.workflowId) {
-      conditions.push(`workflow_id = $${paramIdx}`)
+      conditions.push(`d.workflow_id = $${paramIdx}`)
       params.push(filter.workflowId)
       paramIdx++
     }
     if (filter?.search) {
-      conditions.push(`(name ILIKE $${paramIdx} OR email ILIKE $${paramIdx})`)
+      conditions.push(`(d.name ILIKE $${paramIdx} OR d.email ILIKE $${paramIdx})`)
       params.push(`%${filter.search}%`)
       paramIdx++
+    }
+    if (filter?.hasActiveExecution) {
+      conditions.push(
+        `EXISTS (SELECT 1 FROM executions ex JOIN invoices inv ON inv.id = ex.invoice_id WHERE inv.debtor_id = d.id AND ex.status = 'active')`,
+      )
     }
 
     const where = conditions.join(' AND ')
     const limit = first + 1
 
-    const countParams = params.filter((_, i) => {
-      // Exclude cursor params from count query
-      return !after || i < 1 || i >= 3
-    })
+    let orderBy: string
+    switch (sort) {
+      case 'OUTSTANDING_DESC':
+        orderBy = `(SELECT COALESCE(SUM(inv.outstanding), 0) FROM invoices inv WHERE inv.debtor_id = d.id AND inv.status IN ('due', 'overdue')) DESC, d.id DESC`
+        break
+      case 'OVERDUE_DESC':
+        orderBy = `(SELECT COALESCE(SUM(inv.outstanding), 0) FROM invoices inv WHERE inv.debtor_id = d.id AND inv.status = 'overdue') DESC, d.id DESC`
+        break
+      case 'NEXT_ACTION_DATE_ASC':
+        orderBy = `(SELECT MIN(ex.next_run_at) FROM executions ex JOIN invoices inv ON inv.id = ex.invoice_id WHERE inv.debtor_id = d.id AND ex.status = 'active') ASC NULLS LAST, d.id DESC`
+        break
+      default:
+        orderBy = `d.created_at DESC, d.id DESC`
+    }
+
+    // Simplified count query — no cursor params needed
+    const countConditions: string[] = ['d.company_id = $1']
+    const countParams: unknown[] = [companyId]
+    let countIdx = 2
+    if (filter?.rating) { countConditions.push(`d.rating = $${countIdx}`); countParams.push(filter.rating); countIdx++ }
+    if (filter?.workflowId) { countConditions.push(`d.workflow_id = $${countIdx}`); countParams.push(filter.workflowId); countIdx++ }
+    if (filter?.search) { countConditions.push(`(d.name ILIKE $${countIdx} OR d.email ILIKE $${countIdx})`); countParams.push(`%${filter.search}%`); countIdx++ }
+    if (filter?.hasActiveExecution) {
+      countConditions.push(`EXISTS (SELECT 1 FROM executions ex JOIN invoices inv ON inv.id = ex.invoice_id WHERE inv.debtor_id = d.id AND ex.status = 'active')`)
+    }
 
     const [dataResult, countResult] = await Promise.all([
       this.pool.query<DebtorRow>(
-        `SELECT id, company_id, name, email, rating, has_payment_method, assigned_user_id, workflow_id, created_at, updated_at
-         FROM debtors WHERE ${where}
-         ORDER BY created_at DESC, id DESC
+        `SELECT d.id, d.company_id, d.name, d.email, d.rating, d.has_payment_method, d.assigned_user_id, d.workflow_id, d.created_at, d.updated_at
+         FROM debtors d WHERE ${where}
+         ORDER BY ${orderBy}
          LIMIT ${limit}`,
         params,
       ),
       this.pool.query<{ count: string }>(
-        `SELECT COUNT(*) AS count FROM debtors WHERE company_id = $1${filter?.rating ? ` AND rating = $2` : ''}${filter?.search ? ` AND (name ILIKE $${filter?.rating ? '3' : '2'} OR email ILIKE $${filter?.rating ? '3' : '2'})` : ''}`,
-        [companyId, ...(filter?.rating ? [filter.rating] : []), ...(filter?.search ? [`%${filter.search}%`] : [])],
+        `SELECT COUNT(*) AS count FROM debtors d WHERE ${countConditions.join(' AND ')}`,
+        countParams,
       ),
     ])
 
@@ -129,6 +160,27 @@ export class DebtorService {
     )
     const val = rows[0]?.avg_days
     return val !== null && val !== undefined ? Math.round(parseFloat(val)) : null
+  }
+
+  async getOverdueAmount(id: string, companyId: string): Promise<number> {
+    const { rows } = await this.pool.query<{ total: string }>(
+      `SELECT COALESCE(SUM(outstanding), 0) AS total
+       FROM invoices
+       WHERE debtor_id = $1 AND company_id = $2 AND status = 'overdue'`,
+      [id, companyId],
+    )
+    return parseFloat(rows[0]?.total ?? '0')
+  }
+
+  async getNextActionDate(id: string, companyId: string): Promise<Date | null> {
+    const { rows } = await this.pool.query<{ next_at: Date | null }>(
+      `SELECT MIN(e.next_run_at) AS next_at
+       FROM executions e
+       JOIN invoices i ON i.id = e.invoice_id
+       WHERE i.debtor_id = $1 AND i.company_id = $2 AND e.status = 'active' AND e.next_run_at IS NOT NULL`,
+      [id, companyId],
+    )
+    return rows[0]?.next_at ?? null
   }
 
   async getLastContactedAt(id: string, companyId: string): Promise<Date | null> {

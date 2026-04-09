@@ -1,5 +1,5 @@
 import { Pool } from 'pg'
-import { ExecutionRow, ActionRow } from '@graphql/dataloaders'
+import { ExecutionRow, ActionRow, ActionEventRow } from '@graphql/dataloaders'
 
 export class ExecutionService {
   constructor(private pool: Pool) {}
@@ -34,6 +34,41 @@ export class ExecutionService {
     )
     if (rows.length === 0) throw new Error('Execution not found')
     return rows[0]
+  }
+
+  async ignore(executionId: string, actionId: string, companyId: string): Promise<ActionEventRow> {
+    const client = await this.pool.connect()
+    try {
+      await client.query('BEGIN')
+
+      const { rows: execRows } = await client.query<{ id: string; status: string }>(
+        `SELECT e.id, e.status
+         FROM executions e JOIN invoices i ON i.id = e.invoice_id
+         WHERE e.id = $1 AND i.company_id = $2 FOR UPDATE`,
+        [executionId, companyId],
+      )
+      if (execRows.length === 0) throw new Error('Execution not found')
+
+      const { rows } = await client.query<ActionEventRow>(
+        `INSERT INTO action_events (execution_id, action_id, result, metadata, triggered_at)
+         VALUES ($1, $2, 'skipped', $3, NOW())
+         RETURNING id, execution_id, action_id, triggered_at, result, error, metadata`,
+        [executionId, actionId, JSON.stringify({ manual: true, ignored: true, companyId })],
+      )
+
+      await client.query('COMMIT')
+
+      // Advance to next step outside the transaction
+      await this.advanceExecution(executionId, actionId)
+
+      console.log(`[DUNNING] Action ${actionId} ignored for execution ${executionId}`)
+      return rows[0]
+    } catch (err) {
+      await client.query('ROLLBACK')
+      throw err
+    } finally {
+      client.release()
+    }
   }
 
   async advanceExecution(executionId: string, currentActionId: string): Promise<void> {

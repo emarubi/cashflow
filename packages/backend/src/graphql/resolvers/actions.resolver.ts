@@ -86,5 +86,7 @@ export const actionResolvers = {
     updatedAt:   (p: ActionRow) => p.updated_at,
     template: (p: ActionRow, _: unknown, ctx: ApolloContext) =>
       p.template_id ? ctx.loaders.emailTemplateById.load(p.template_id) : null,
+    workflow: (p: ActionRow, _: unknown, ctx: ApolloContext) =>
+      ctx.loaders.workflowById.load(p.workflow_id),
   },
 }

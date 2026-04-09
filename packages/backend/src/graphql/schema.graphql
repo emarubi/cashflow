@@ -68,6 +68,12 @@ enum DebtorRating {
   D
 }
 
+enum DebtorSort {
+  OUTSTANDING_DESC
+  OVERDUE_DESC
+  NEXT_ACTION_DATE_ASC
+}
+
 enum UserRole {
   admin
   user
@@ -123,6 +129,7 @@ type EmailTemplate {
 type Action {
   id: ID!
   workflowId: ID!
+  workflow: Workflow!
   delayDays: Int!
   trigger: ActionTrigger!
   channel: ActionChannel!
@@ -172,6 +179,8 @@ type Debtor {
   rating: DebtorRating
   hasPaymentMethod: Boolean!
   outstandingAmount: Float!
+  overdueAmount: Float!
+  nextActionDate: DateTime
   avgPaymentDelayDays: Float
   lastContactedAt: DateTime
   assignedUserId: ID
@@ -384,6 +393,7 @@ input DebtorsFilterInput {
   rating: DebtorRating
   workflowId: ID
   search: String
+  hasActiveExecution: Boolean
 }
 
 input PaymentsFilterInput {
@@ -471,7 +481,7 @@ type Query {
   dashboard: Dashboard!
   invoices(first: Int, after: String, filter: InvoicesFilterInput): InvoiceConnection!
   invoice(id: ID!): Invoice!
-  debtors(first: Int, after: String, filter: DebtorsFilterInput): DebtorConnection!
+  debtors(first: Int, after: String, filter: DebtorsFilterInput, sort: DebtorSort): DebtorConnection!
   debtor(id: ID!): Debtor!
   workflows: [Workflow!]!
   workflow(id: ID!): Workflow!
@@ -498,4 +508,5 @@ type Mutation {
   deleteAction(id: ID!): Boolean!
   sendTestEmail(input: SendTestEmailInput!): Boolean!
   applyBankTransaction(input: ApplyBankTransactionInput!): BankTransaction!
+  ignoreAction(executionId: ID!, actionId: ID!): ActionEvent!
 }

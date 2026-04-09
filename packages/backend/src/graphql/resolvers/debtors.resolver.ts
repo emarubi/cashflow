@@ -10,10 +10,10 @@ function requireAuth(ctx: ApolloContext): void {
 
 export const debtorResolvers = {
   Query: {
-    debtors: (_: unknown, args: { first?: number; after?: string; filter?: { rating?: string; workflowId?: string; search?: string } }, ctx: ApolloContext) => {
+    debtors: (_: unknown, args: { first?: number; after?: string; filter?: { rating?: string; workflowId?: string; search?: string; hasActiveExecution?: boolean }; sort?: string }, ctx: ApolloContext) => {
       requireAuth(ctx)
       const svc = new DebtorService(ctx.pool)
-      return svc.list(ctx.companyId, args.first ?? 20, args.after, args.filter)
+      return svc.list(ctx.companyId, args.first ?? 20, args.after, args.filter, args.sort as 'OUTSTANDING_DESC' | 'OVERDUE_DESC' | 'NEXT_ACTION_DATE_ASC' | undefined)
     },
     debtor: async (_: unknown, args: { id: string }, ctx: ApolloContext) => {
       requireAuth(ctx)
@@ -33,6 +33,14 @@ export const debtorResolvers = {
     outstandingAmount: (p: DebtorRow, _: unknown, ctx: ApolloContext) => {
       const svc = new DebtorService(ctx.pool)
       return svc.getOutstandingAmount(p.id, ctx.companyId)
+    },
+    overdueAmount: (p: DebtorRow, _: unknown, ctx: ApolloContext) => {
+      const svc = new DebtorService(ctx.pool)
+      return svc.getOverdueAmount(p.id, ctx.companyId)
+    },
+    nextActionDate: (p: DebtorRow, _: unknown, ctx: ApolloContext) => {
+      const svc = new DebtorService(ctx.pool)
+      return svc.getNextActionDate(p.id, ctx.companyId)
     },
     avgPaymentDelayDays: (p: DebtorRow, _: unknown, ctx: ApolloContext) => {
       const svc = new DebtorService(ctx.pool)
