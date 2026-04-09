@@ -38,7 +38,7 @@ export default function InvoicesPage() {
       {/* Page title */}
       <h1 className="text-xl font-semibold text-gray-900 mb-4">{t('nav.invoices')}</h1>
 
-    <div className="flex flex-col h-full overflow-hidden border border-gray-200 rounded-lg p-8">
+    <div className="flex flex-col h-full overflow-hidden border border-gray-200 rounded-lg p-8 bg-white">
       {/* Toolbar (tabs + filters) */}
       <InvoicesToolbar
         activeTab={activeTab}

@@ -1,6 +1,6 @@
+import { useDebtor } from "@/hooks/useDebtor";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
-import { useDebtor } from "@/hooks/useDebtor";
 import CustomerDetailHeader from "./CustomerDetailHeader";
 import CustomerDetailTabs from "./CustomerDetailTabs";
 import CustomerInfoCard from "./CustomerInfoCard";
@@ -36,14 +36,14 @@ export default function CustomerDetailPage() {
       {/* Two-column body */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left sidebar — scrollable */}
-        <div className="w-2/5 flex-shrink-0 overflow-y-auto p-4 space-y-4 bg-gray-50">
+        <div className="w-2/5 flex-shrink-0 overflow-y-auto p-4 space-y-4 ">
           <CustomerInfoCard debtor={debtor} />
           <GroupEntitiesCard />
           <PaymentMethodCard hasPaymentMethod={debtor.hasPaymentMethod} />
         </div>
 
         {/* Right panel — tabs */}
-        <div className="w-3/5 min-w-120 overflow-hidden flex flex-col p-4 bg-gray-50">
+        <div className="w-3/5 min-w-120 overflow-hidden flex flex-col p-4 ">
           <CustomerDetailTabs debtorId={debtor.id} debtorEmail={debtor.email} />
         </div>
       </div>

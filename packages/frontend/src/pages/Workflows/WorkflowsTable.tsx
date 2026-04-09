@@ -10,7 +10,7 @@ export default function WorkflowsTable({ workflows }: WorkflowsTableProps) {
   const { t } = useTranslation()
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto bg-white rounded-lg shadow overflow-hidden">
       <table className="w-full text-left border-collapse">
         <thead>
           <tr className="border-b border-gray-200">
