@@ -5,6 +5,14 @@ import { invalidateDashboardCache } from '@cache/dashboard'
 import { DunningJobPayload } from './dunning.queue'
 
 async function processDunningJob(job: Job<DunningJobPayload>): Promise<void> {
+  // Handle test email jobs — no real execution context needed
+  if (job.data.test === true) {
+    console.log(`[DUNNING TEST] To: ${job.data.testTo}`)
+    console.log(`[DUNNING TEST] Subject: ${job.data.testSubject}`)
+    console.log(`[DUNNING TEST] Body preview: ${(job.data.testBody ?? '').slice(0, 200)}`)
+    return
+  }
+
   const { executionId, actionId, invoiceId, companyId } = job.data
 
   // Step 1: Idempotency check

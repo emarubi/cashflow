@@ -83,16 +83,25 @@ Web application for managing unpaid invoice dunning — a functional clone of Up
 | **Hooks (invoices)** | `useInvoices`, `useInvoice`, `useInvoicePayments`, `useCreditNotes`, `useCreditNote` |
 | **Routes** | Added `/:slug/invoices/:id` (invoice detail) and `/:slug/invoices/credit-notes/:id` (credit note detail) |
 | **i18n (invoices)** | ~60 keys added per locale covering invoices, credit notes, filter labels, detail page labels |
+| **New Action drawer** | `WorkflowDetail/NewActionDrawer.tsx` — right-side drawer opened from "+ New action" button; fields: Name, Assigned dates (due/issue), Trigger (delay days + before/after/on-issue), Type (send automatically checkbox), From (sender name), Recipients (Main contact tag), CC, BCC, Subject (with `{{ }}` variable hint), Message body; footer: "Send me a test email" + Save |
+| **createAction mutation** | Backend: `ActionService.create()` — creates EmailTemplate + Action in one transaction; `createAction` GraphQL mutation wired in `actions.resolver.ts`; increments `step_order` automatically |
+| **sendTestEmail mutation** | Backend: enqueues a `test: true` job to `dunning-queue`; worker short-circuits and logs `[DUNNING TEST]` to console; satisfies "add to queue worker" requirement |
+| **Action.isAutomatic** | Migration `20260409000002`, new `is_automatic BOOLEAN` column on `actions`; exposed as `isAutomatic: Boolean!` in GraphQL schema; checkbox in drawer |
+| **GraphQL mutations (actions)** | `src/graphql/mutations/action.ts` — `CREATE_ACTION`, `SEND_TEST_EMAIL` |
+| **Hooks (actions)** | `useCreateAction`, `useSendTestEmail`, `useEmailTemplates` |
+| **i18n (actions)** | ~30 keys added per locale under `action.*` namespace |
 
 ### 🔲 To Do — Frontend
 
-| Area                  | What needs to be built                                                                                         |
-| --------------------- | -------------------------------------------------------------------------------------------------------------- |
-| **Actions**           | `src/pages/Actions/` — To Do / All views, action detail with pre-filled email, send/pause/ignore               |
-| **Payments**          | `src/pages/Payments/` — paginated list with filters (status, customer)                                         |
-| **Bank**              | `src/pages/Bank/` — transaction list, reconciliation suggestions, manual apply                                 |
-| **GraphQL mutations** | `@/graphql/mutations/` — pauseExecution, resumeExecution, createWorkflow, applyBankTransaction                 |
-| **Tests**             | RTL tests for key components and hooks                                                                         |
+| Area                  | What needs to be built                                                                                                      |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| **Actions**           | `src/pages/Actions/` — To Do / All views, action detail with pre-filled email, send/pause/ignore                            |
+| **Payments**          | `src/pages/Payments/` — paginated list with filters (status, customer)                                                      |
+| **Bank**              | `src/pages/Bank/` — transaction list, reconciliation suggestions, manual apply                                              |
+| **GraphQL mutations** | `@/graphql/mutations/` — pauseExecution, resumeExecution, createWorkflow, applyBankTransaction                              |
+| **Action drawer — CC/BCC persistence** | CC and BCC fields in the drawer are UI-only — backend schema has no such columns yet; add migration + service if needed |
+| **Variable picker**   | The `{{ }}` button in Subject/Message is a stub — a proper variable picker popover (org name, invoice number, etc.) is still missing |
+| **Tests**             | RTL tests for key components and hooks; unit tests for `ActionService`                                                      |
 
 ---
 
@@ -224,7 +233,7 @@ cashflow/
 │   │   │   │   ├── context.ts
 │   │   │   │   ├── dataloaders.ts    # 14 DataLoaders, all per-request + tenant-scoped
 │   │   │   │   ├── resolvers/        # 13 resolver files + scalars + index
-│   │   │   │   └── services/         # 11 service files (all SQL here)
+│   │   │   │   └── services/         # 12 service files (all SQL here, incl. ActionService)
 │   │   │   ├── db/
 │   │   │   │   ├── pool.ts           # ✅ pg.Pool singleton
 │   │   │   │   ├── migrations/       # ✅ 13 migrations (db-migrate, SQL files)
@@ -252,7 +261,7 @@ cashflow/
 │       │   ├── pages/
 │       │   │   ├── Login/            # ✅ login form (slug + email + password)
 │       │   │   ├── Dashboard/        # ✅ KPIs, outstanding, DSO, risk rate, debtors, aging balance
-│       │   │   ├── Workflows/        # ✅ list table + WorkflowDetail/ (settings, analytics, action sequence)
+│       │   │   ├── Workflows/        # ✅ list table + WorkflowDetail/ (settings, analytics, action sequence + New Action drawer)
 │       │   │   ├── Customers/        # ✅ paginated list with search + CustomerDetail/ (6-tab detail view)
 │       │   │   ├── Invoices/         # ✅ list (Invoices + Credit Notes tabs, filter panel)
 │       │   │   │   ├── InvoiceDetail/    # ✅ two-column detail (info, payments, timeline)

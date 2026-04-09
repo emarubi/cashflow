@@ -68,6 +68,7 @@ export interface ActionRow {
   channel: string
   template_id: string | null
   sender_name: string | null
+  is_automatic: boolean
   step_order: number
   created_at: Date
   updated_at: Date
@@ -178,7 +179,7 @@ export function createLoaders(pool: Pool, companyId: string) {
 
   const actionById = new DataLoader<string, ActionRow | null>(async (ids) => {
     const { rows } = await pool.query<ActionRow>(
-      'SELECT id, workflow_id, delay_days, trigger, channel, template_id, sender_name, step_order, created_at, updated_at FROM actions WHERE id = ANY($1)',
+      'SELECT id, workflow_id, delay_days, trigger, channel, template_id, sender_name, is_automatic, step_order, created_at, updated_at FROM actions WHERE id = ANY($1)',
       [ids as string[]],
     )
     const map = new Map(rows.map((r) => [r.id, r]))
@@ -220,7 +221,7 @@ export function createLoaders(pool: Pool, companyId: string) {
 
   const actionsByWorkflowId = new DataLoader<string, ActionRow[]>(async (workflowIds) => {
     const { rows } = await pool.query<ActionRow>(
-      'SELECT id, workflow_id, delay_days, trigger, channel, template_id, sender_name, step_order, created_at, updated_at FROM actions WHERE workflow_id = ANY($1) ORDER BY step_order',
+      'SELECT id, workflow_id, delay_days, trigger, channel, template_id, sender_name, is_automatic, step_order, created_at, updated_at FROM actions WHERE workflow_id = ANY($1) ORDER BY step_order',
       [workflowIds as string[]],
     )
     const map = new Map<string, ActionRow[]>()

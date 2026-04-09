@@ -6,6 +6,11 @@ export interface DunningJobPayload {
   actionId: string
   invoiceId: string
   companyId: string
+  // Optional fields for test email jobs
+  test?: boolean
+  testTo?: string
+  testSubject?: string
+  testBody?: string
 }
 
 export const dunningQueue = new Queue<DunningJobPayload>('dunning-queue', {

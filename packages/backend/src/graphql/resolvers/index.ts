@@ -32,6 +32,7 @@ export const resolvers = {
   Mutation: {
     ...authResolvers.Mutation,
     ...workflowResolvers.Mutation,
+    ...actionResolvers.Mutation,
     ...executionResolvers.Mutation,
     ...bankTransactionResolvers.Mutation,
     ...actionEventResolvers.Mutation,

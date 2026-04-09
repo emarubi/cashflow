@@ -129,6 +129,7 @@ type Action {
   templateId: ID
   template: EmailTemplate
   senderName: String
+  isAutomatic: Boolean!
   stepOrder: Int!
   createdAt: DateTime!
   updatedAt: DateTime!
@@ -430,6 +431,24 @@ input ApplyBankTransactionInput {
   appliedAmount: Float!
 }
 
+input CreateActionInput {
+  workflowId: ID!
+  delayDays: Int!
+  trigger: ActionTrigger!
+  channel: ActionChannel!
+  senderName: String
+  isAutomatic: Boolean
+  templateName: String!
+  templateSubject: String!
+  templateBody: String!
+}
+
+input SendTestEmailInput {
+  to: String!
+  subject: String!
+  body: String!
+}
+
 type WorkflowActionStats {
   actionId:              ID!
   performedActionsCount: Int!
@@ -463,5 +482,7 @@ type Mutation {
   resumeExecution(executionId: ID!): Execution!
   createWorkflow(input: CreateWorkflowInput!): Workflow!
   updateWorkflow(id: ID!, input: UpdateWorkflowInput!): Workflow!
+  createAction(input: CreateActionInput!): Action!
+  sendTestEmail(input: SendTestEmailInput!): Boolean!
   applyBankTransaction(input: ApplyBankTransactionInput!): BankTransaction!
 }

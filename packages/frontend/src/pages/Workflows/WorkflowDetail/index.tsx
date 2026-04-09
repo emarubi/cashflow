@@ -60,7 +60,7 @@ export default function WorkflowDetailPage() {
       />
 
       {/* Actions list */}
-      <WorkflowActionsSection actions={workflow.actions} statsMap={statsMap} />
+      <WorkflowActionsSection workflowId={workflow.id} actions={workflow.actions} statsMap={statsMap} />
     </div>
   )
 }
