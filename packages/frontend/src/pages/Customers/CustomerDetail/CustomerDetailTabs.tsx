@@ -34,7 +34,7 @@ export default function CustomerDetailTabs({ debtorId, debtorEmail }: CustomerDe
     : []
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full p-4 rounded-lg border border-gray-200 bg-white">
       {/* Tab nav */}
       <div className="flex border-b border-gray-200 flex-shrink-0">
         {TABS.map((tab) => (

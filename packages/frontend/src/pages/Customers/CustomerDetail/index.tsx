@@ -36,14 +36,14 @@ export default function CustomerDetailPage() {
       {/* Two-column body */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left sidebar — scrollable */}
-        <div className="w-72 flex-shrink-0 overflow-y-auto border-r border-gray-200 p-4 space-y-4 bg-gray-50">
+        <div className="w-2/5 flex-shrink-0 overflow-y-auto p-4 space-y-4 bg-gray-50">
           <CustomerInfoCard debtor={debtor} />
           <GroupEntitiesCard />
           <PaymentMethodCard hasPaymentMethod={debtor.hasPaymentMethod} />
         </div>
 
         {/* Right panel — tabs */}
-        <div className="flex-1 overflow-hidden flex flex-col bg-white">
+        <div className="w-3/5 min-w-120 overflow-hidden flex flex-col p-4 bg-gray-50">
           <CustomerDetailTabs debtorId={debtor.id} debtorEmail={debtor.email} />
         </div>
       </div>

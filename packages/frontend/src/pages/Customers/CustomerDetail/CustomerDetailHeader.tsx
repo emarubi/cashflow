@@ -11,7 +11,7 @@ export default function CustomerDetailHeader({ name }: CustomerDetailHeaderProps
   const slug = companySlug ?? ''
 
   return (
-    <div className="flex items-center justify-between px-6 py-3 border-b border-gray-200 bg-white">
+    <div className="flex items-center justify-between px-6 py-3 bg-gray-50">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-gray-500">
         <Link to={`/${slug}/customers`} className="hover:text-gray-700">
