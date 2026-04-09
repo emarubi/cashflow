@@ -16,7 +16,6 @@ This project is a functional clone of Upflow, built with the following stack:
 - Faithfully reproduce the main features visible in the Upflow demo
 - Implement a realistic multi-tenant architecture with data isolation per company
 - Demonstrate mastery of the full tech stack (fullstack TypeScript, GraphQL, queues, auth)
-- Serve as preparation material for a Senior Fullstack Engineer technical interview
 
 ---
 

@@ -36,10 +36,12 @@ Web application for managing unpaid invoice dunning — a functional clone of Up
 | **DB pool**           | `src/db/pool.ts` — `pg.Pool` singleton (max 20 connections)                                                                                                                                                                                                                            |
 | **Auth**              | `src/auth/` — JWT sign/verify (15 min access + 7 day refresh), Express middleware, `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout`                                                                                                                                       |
 | **Redis cache**       | `src/cache/redis.ts` — ioredis singleton + BullMQ-compatible factory; `src/cache/dashboard.ts` — get/set/invalidate with 5 min TTL                                                                                                                                                     |
-| **GraphQL schema**    | `@/graphql/schema.graphql` — full SDL: 3 scalars, 12 enums, 11 domain types, 5 cursor-based connection types, Dashboard type, 11 queries, 8 mutations                                                                                                                                  |
-| **DataLoaders**       | `@/graphql/dataloaders.ts` — 12 loaders (all per-request, scoped to `companyId`): userById, debtorById, invoiceById, workflowById, actionById, emailTemplateById, executionById, executionByInvoiceId, actionsByWorkflowId, actionEventsByExecutionId, paymentById, invoicesByDebtorId |
-| **Services**          | 10 service files in `@/graphql/services/` — all SQL lives here, all queries scoped to `company_id`                                                                                                                                                                                     |
-| **Resolvers**         | 12 resolver files in `@/graphql/resolvers/` + scalar definitions — thin layer, delegates to services, uses DataLoaders for relations                                                                                                                                                   |
+| **GraphQL schema**    | `@/graphql/schema.graphql` — full SDL: 3 scalars, 13 enums, 13 domain types, 6 cursor-based connection types, Dashboard type, 13 queries, 8 mutations                                                                                                                                  |
+| **DataLoaders**       | `@/graphql/dataloaders.ts` — 14 loaders (all per-request, scoped to `companyId`): userById, debtorById, invoiceById, workflowById, actionById, emailTemplateById, executionById, executionByInvoiceId, actionsByWorkflowId, actionEventsByExecutionId, paymentById, invoicesByDebtorId, creditNoteById, creditNotesByInvoiceId |
+| **Services**          | 11 service files in `@/graphql/services/` — all SQL lives here, all queries scoped to `company_id`                                                                                                                                                                                     |
+| **Resolvers**         | 13 resolver files in `@/graphql/resolvers/` + scalar definitions — thin layer, delegates to services, uses DataLoaders for relations                                                                                                                                                   |
+| **Credit notes**      | New `credit_notes` table (migration `20260409000001`), `CreditNoteService`, `creditNoteResolvers` — full CRUD-style support for credit notes with debtor + invoice relations                                                                                                           |
+| **Payments filter**   | `PaymentsFilterInput` extended with `invoiceId` to support fetching payments scoped to a single invoice                                                                                                                                                                                |
 | **BullMQ queue**      | `src/queues/dunning.queue.ts` — `dunning-queue`, 3 attempts with exponential backoff                                                                                                                                                                                                   |
 | **BullMQ worker**     | `src/queues/dunning.worker.ts` — idempotency → invoice lock → pause-if-paid → log → insert event → advance execution → invalidate cache                                                                                                                                                |
 | **Scheduler**         | `src/queues/dunning.scheduler.ts` — polls `executions` every 60s, enqueues with 0–5 min jitter                                                                                                                                                                                         |
@@ -74,12 +76,18 @@ Web application for managing unpaid invoice dunning — a functional clone of Up
 | **GraphQL queries** | `customers.ts`, `customer.ts`, `customerInvoices.ts`, `customerPayments.ts`, `customerTimeline.ts` |
 | **Hooks** | `useDebtors`, `useDebtor`, `useDebtorInvoices`, `useDebtorPayments`, `useDebtorTimeline` |
 | **Backend extensions** | `Debtor` type: `outstandingAmount`, `avgPaymentDelayDays`, `lastContactedAt`; `ActionEventsFilterInput`: `debtorId` filter |
+| **Invoices list** | `src/pages/Invoices/` — two-tab page (Invoices / Credit Notes); invoice table with Number (→ detail), Customer (→ customer detail), Status badge, Issue date, Due date, Total, Outstanding; credit notes table with Number (→ detail), Source, Customer (→ customer detail), Currency, Issue date, Title, Applied to (→ invoice or "Apply to invoice" button), Total; filter panel (Status checkboxes, Currency) with active chip dismissal |
+| **Invoice detail** | `src/pages/Invoices/InvoiceDetail/` — two-column layout (same pattern as CustomerDetail): left card with amounts, dates, customer link, assigned user, workflow, promise-to-pay, custom fields; right panel with Payments & Credit Notes table and Invoice Timeline (action events with channel icon, result badge, metadata) |
+| **Credit note detail** | `src/pages/Invoices/CreditNoteDetail/` — two-column layout: left with info card (customer, title, issue date, external status, amounts, PDF download) + custom fields card; right with Applied Invoices table + Refunds table |
+| **GraphQL queries (invoices)** | `invoices.ts`, `invoice.ts`, `invoicePayments.ts`, `creditNotes.ts`, `creditNote.ts` |
+| **Hooks (invoices)** | `useInvoices`, `useInvoice`, `useInvoicePayments`, `useCreditNotes`, `useCreditNote` |
+| **Routes** | Added `/:slug/invoices/:id` (invoice detail) and `/:slug/invoices/credit-notes/:id` (credit note detail) |
+| **i18n (invoices)** | ~60 keys added per locale covering invoices, credit notes, filter labels, detail page labels |
 
 ### 🔲 To Do — Frontend
 
 | Area                  | What needs to be built                                                                                         |
 | --------------------- | -------------------------------------------------------------------------------------------------------------- |
-| **Invoices**          | `src/pages/Invoices/` — paginated list with status filters (due / overdue / in_dispute), Invoices / Credit Notes tabs |
 | **Actions**           | `src/pages/Actions/` — To Do / All views, action detail with pre-filled email, send/pause/ignore               |
 | **Payments**          | `src/pages/Payments/` — paginated list with filters (status, customer)                                         |
 | **Bank**              | `src/pages/Bank/` — transaction list, reconciliation suggestions, manual apply                                 |
@@ -214,12 +222,12 @@ cashflow/
 │   │   │   ├── graphql/              # ✅ schema SDL, resolvers, services, dataloaders
 │   │   │   │   ├── schema.graphql
 │   │   │   │   ├── context.ts
-│   │   │   │   ├── dataloaders.ts    # 12 DataLoaders, all per-request + tenant-scoped
-│   │   │   │   ├── resolvers/        # 12 resolver files + scalars + index
-│   │   │   │   └── services/         # 10 service files (all SQL here)
+│   │   │   │   ├── dataloaders.ts    # 14 DataLoaders, all per-request + tenant-scoped
+│   │   │   │   ├── resolvers/        # 13 resolver files + scalars + index
+│   │   │   │   └── services/         # 11 service files (all SQL here)
 │   │   │   ├── db/
 │   │   │   │   ├── pool.ts           # ✅ pg.Pool singleton
-│   │   │   │   ├── migrations/       # ✅ 12 migrations (db-migrate, SQL files)
+│   │   │   │   ├── migrations/       # ✅ 13 migrations (db-migrate, SQL files)
 │   │   │   │   └── seeds/            # ✅ 12 seeders (faker, batch inserts)
 │   │   │   ├── queues/               # ✅ BullMQ dunning queue, worker, scheduler
 │   │   │   │   ├── dunning.queue.ts
@@ -246,7 +254,9 @@ cashflow/
 │       │   │   ├── Dashboard/        # ✅ KPIs, outstanding, DSO, risk rate, debtors, aging balance
 │       │   │   ├── Workflows/        # ✅ list table + WorkflowDetail/ (settings, analytics, action sequence)
 │       │   │   ├── Customers/        # ✅ paginated list with search + CustomerDetail/ (6-tab detail view)
-│       │   │   ├── Invoices/         # stub
+│       │   │   ├── Invoices/         # ✅ list (Invoices + Credit Notes tabs, filter panel)
+│       │   │   │   ├── InvoiceDetail/    # ✅ two-column detail (info, payments, timeline)
+│       │   │   │   └── CreditNoteDetail/ # ✅ two-column detail (info, applied invoices, refunds)
 │       │   │   ├── Actions/          # stub
 │       │   │   ├── Payments/         # stub
 │       │   │   └── Bank/             # stub
@@ -258,13 +268,17 @@ cashflow/
 │       │   │   └── queries/          # ✅ dashboard, workflows, workflow, workflowActionStats,
 │       │   │                         #    customers, customer, customerInvoices,
 │       │   │                         #    customerPayments, customerTimeline
+│       │   │                         #    invoices, invoice, invoicePayments,
+│       │   │                         #    creditNotes, creditNote
 │       │   ├── hooks/                # ✅ useDashboard, useWorkflows, useWorkflow,
 │       │   │                         #    useWorkflowActionStats, useUpdateWorkflow,
 │       │   │                         #    useDebtors, useDebtor, useDebtorInvoices,
-│       │   │                         #    useDebtorPayments, useDebtorTimeline
-│       │   ├── locales/              # ✅ fr.json + en.json (nav + auth + dashboard + workflows + customers)
+│       │   │                         #    useDebtorPayments, useDebtorTimeline,
+│       │   │                         #    useInvoices, useInvoice, useInvoicePayments,
+│       │   │                         #    useCreditNotes, useCreditNote
+│       │   ├── locales/              # ✅ fr.json + en.json (nav + auth + dashboard + workflows + customers + invoices)
 │       │   ├── i18n.ts               # ✅ react-i18next init
-│       │   └── App.tsx               # ✅ createBrowserRouter, all 10 routes
+│       │   └── App.tsx               # ✅ createBrowserRouter, 12 routes (incl. invoice + credit note detail)
 │       ├── index.html                # ✅
 │       ├── tailwind.config.js        # ✅ custom sidebar color tokens
 │       ├── postcss.config.js         # ✅
@@ -312,7 +326,9 @@ Migrations live in `src/db/migrations/sqls/` as separate `.up.sql` / `.down.sql`
 | `/:slug/workflows/:id` | Workflow detail with its actions     |
 | `/:slug/customers`     | Debtor customer list                 |
 | `/:slug/customers/:id` | Customer detail                      |
-| `/:slug/invoices`      | Invoice list with filters            |
+| `/:slug/invoices`                     | Invoice list (Invoices + Credit Notes tabs, filter panel) |
+| `/:slug/invoices/:id`                 | Invoice detail (info, payments, timeline)                 |
+| `/:slug/invoices/credit-notes/:id`    | Credit note detail (info, applied invoices, refunds)      |
 | `/:slug/actions`       | Actions to process (To Do)           |
 | `/:slug/emails`        | Sent email history                   |
 | `/:slug/payments`      | Payment list                         |
@@ -392,4 +408,4 @@ cd packages/backend && pnpm migrate:up && pnpm seed
 
 ## License
 
-MIT
+emarubi

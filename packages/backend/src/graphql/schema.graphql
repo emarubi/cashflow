@@ -55,6 +55,12 @@ enum BankTransactionStatus {
   excluded
 }
 
+enum CreditNoteStatus {
+  unapplied
+  applied
+  partial
+}
+
 enum DebtorRating {
   A
   B
@@ -255,6 +261,36 @@ type BankTransaction {
   updatedAt: DateTime!
 }
 
+type CreditNote {
+  id: ID!
+  companyId: ID!
+  debtorId: ID
+  debtor: Debtor
+  invoiceId: ID
+  invoice: Invoice
+  number: String!
+  title: String
+  source: String
+  currency: String!
+  amount: Float!
+  amountApplied: Float!
+  status: CreditNoteStatus!
+  issueDate: Date!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type CreditNoteEdge {
+  cursor: String!
+  node: CreditNote!
+}
+
+type CreditNoteConnection {
+  edges: [CreditNoteEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
 type TrendPoint {
   month: String!
   value: Float!
@@ -352,10 +388,18 @@ input DebtorsFilterInput {
 input PaymentsFilterInput {
   status: PaymentStatus
   debtorId: ID
+  invoiceId: ID
 }
 
 input BankTransactionsFilterInput {
   status: BankTransactionStatus
+}
+
+input CreditNotesFilterInput {
+  debtorId: ID
+  status: CreditNoteStatus
+  currency: String
+  search: String
 }
 
 input ActionEventsFilterInput {
@@ -404,6 +448,8 @@ type Query {
   workflowActionStats(workflowId: ID!, startDate: DateTime!, endDate: DateTime!): [WorkflowActionStats!]!
   payments(first: Int, after: String, filter: PaymentsFilterInput): PaymentConnection!
   bankTransactions(first: Int, after: String, filter: BankTransactionsFilterInput): BankTransactionConnection!
+  creditNotes(first: Int, after: String, filter: CreditNotesFilterInput): CreditNoteConnection!
+  creditNote(id: ID!): CreditNote!
   actionEvents(first: Int, after: String, filter: ActionEventsFilterInput): ActionEventConnection!
   emailTemplates: [EmailTemplate!]!
 }

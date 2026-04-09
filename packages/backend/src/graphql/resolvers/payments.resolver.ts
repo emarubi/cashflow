@@ -9,7 +9,7 @@ function requireAuth(ctx: ApolloContext): void {
 
 export const paymentResolvers = {
   Query: {
-    payments: (_: unknown, args: { first?: number; after?: string; filter?: { status?: string; debtorId?: string } }, ctx: ApolloContext) => {
+    payments: (_: unknown, args: { first?: number; after?: string; filter?: { status?: string; debtorId?: string; invoiceId?: string } }, ctx: ApolloContext) => {
       requireAuth(ctx)
       const svc = new PaymentService(ctx.pool)
       return svc.list(ctx.companyId, args.first ?? 20, args.after, args.filter)

@@ -4,6 +4,7 @@ import { PaymentRow } from '@graphql/dataloaders'
 interface PaymentFilter {
   status?: string
   debtorId?: string
+  invoiceId?: string
 }
 
 interface PaymentConnection {
@@ -45,9 +46,22 @@ export class PaymentService {
       params.push(filter.debtorId)
       paramIdx++
     }
+    if (filter?.invoiceId) {
+      conditions.push(`invoice_id = $${paramIdx}`)
+      params.push(filter.invoiceId)
+      paramIdx++
+    }
 
     const where = conditions.join(' AND ')
     const limit = first + 1
+
+    // Build count params without the cursor condition (always starts from $1=companyId)
+    const countParams: unknown[] = [companyId]
+    const countConditions: string[] = ['company_id = $1']
+    let countIdx = 2
+    if (filter?.status) { countConditions.push(`status = $${countIdx}`); countParams.push(filter.status); countIdx++ }
+    if (filter?.debtorId) { countConditions.push(`debtor_id = $${countIdx}`); countParams.push(filter.debtorId); countIdx++ }
+    if (filter?.invoiceId) { countConditions.push(`invoice_id = $${countIdx}`); countParams.push(filter.invoiceId); countIdx++ }
 
     const [dataResult, countResult] = await Promise.all([
       this.pool.query<PaymentRow>(
@@ -57,8 +71,8 @@ export class PaymentService {
         params,
       ),
       this.pool.query<{ count: string }>(
-        `SELECT COUNT(*) AS count FROM payments WHERE company_id = $1${filter?.status ? ' AND status = $2' : ''}${filter?.debtorId ? ` AND debtor_id = $${filter?.status ? '3' : '2'}` : ''}`,
-        [companyId, ...(filter?.status ? [filter.status] : []), ...(filter?.debtorId ? [filter.debtorId] : [])],
+        `SELECT COUNT(*) AS count FROM payments WHERE ${countConditions.join(' AND ')}`,
+        countParams,
       ),
     ])
 

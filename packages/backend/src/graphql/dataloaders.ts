@@ -120,6 +120,23 @@ export interface PaymentRow {
   created_at: Date
 }
 
+export interface CreditNoteRow {
+  id: string
+  company_id: string
+  debtor_id: string | null
+  invoice_id: string | null
+  number: string
+  title: string | null
+  source: string | null
+  currency: string
+  amount: string
+  amount_applied: string
+  status: string
+  issue_date: Date
+  created_at: Date
+  updated_at: Date
+}
+
 // ─── Loader factories ─────────────────────────────────────────────────────────
 
 export function createLoaders(pool: Pool, companyId: string) {
@@ -238,6 +255,32 @@ export function createLoaders(pool: Pool, companyId: string) {
     return ids.map((id) => map.get(id) ?? null)
   })
 
+  const creditNoteById = new DataLoader<string, CreditNoteRow | null>(async (ids) => {
+    const { rows } = await pool.query<CreditNoteRow>(
+      `SELECT id, company_id, debtor_id, invoice_id, number, title, source, currency, amount, amount_applied, status, issue_date, created_at, updated_at
+       FROM credit_notes WHERE id = ANY($1) AND company_id = $2`,
+      [ids as string[], companyId],
+    )
+    const map = new Map(rows.map((r) => [r.id, r]))
+    return ids.map((id) => map.get(id) ?? null)
+  })
+
+  const creditNotesByInvoiceId = new DataLoader<string, CreditNoteRow[]>(async (invoiceIds) => {
+    const { rows } = await pool.query<CreditNoteRow>(
+      `SELECT id, company_id, debtor_id, invoice_id, number, title, source, currency, amount, amount_applied, status, issue_date, created_at, updated_at
+       FROM credit_notes WHERE invoice_id = ANY($1) AND company_id = $2`,
+      [invoiceIds as string[], companyId],
+    )
+    const map = new Map<string, CreditNoteRow[]>()
+    for (const row of rows) {
+      if (!row.invoice_id) continue
+      const arr = map.get(row.invoice_id) ?? []
+      arr.push(row)
+      map.set(row.invoice_id, arr)
+    }
+    return invoiceIds.map((id) => map.get(id) ?? [])
+  })
+
   const invoicesByDebtorId = new DataLoader<string, InvoiceRow[]>(async (debtorIds) => {
     const { rows } = await pool.query<InvoiceRow>(
       'SELECT id, company_id, debtor_id, number, amount, outstanding, currency, issue_date, due_date, status, paid_at, created_at, updated_at FROM invoices WHERE debtor_id = ANY($1) AND company_id = $2 ORDER BY due_date DESC',
@@ -265,5 +308,7 @@ export function createLoaders(pool: Pool, companyId: string) {
     actionEventsByExecutionId,
     paymentById,
     invoicesByDebtorId,
+    creditNoteById,
+    creditNotesByInvoiceId,
   }
 }

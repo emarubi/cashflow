@@ -7,6 +7,8 @@ import WorkflowDetailPage from '@/pages/Workflows/WorkflowDetail'
 import CustomersPage from '@/pages/Customers'
 import CustomerDetailPage from '@/pages/Customers/CustomerDetail'
 import InvoicesPage from '@/pages/Invoices'
+import InvoiceDetailPage from '@/pages/Invoices/InvoiceDetail'
+import CreditNoteDetailPage from '@/pages/Invoices/CreditNoteDetail'
 import ActionsPage from '@/pages/Actions'
 import PaymentsPage from '@/pages/Payments'
 import BankPage from '@/pages/Bank'
@@ -27,6 +29,8 @@ const router = createBrowserRouter([
       { path: 'customers', element: <CustomersPage /> },
       { path: 'customers/:id', element: <CustomerDetailPage /> },
       { path: 'invoices', element: <InvoicesPage /> },
+      { path: 'invoices/:id', element: <InvoiceDetailPage /> },
+      { path: 'invoices/credit-notes/:id', element: <CreditNoteDetailPage /> },
       { path: 'actions', element: <ActionsPage /> },
       { path: 'payments', element: <PaymentsPage /> },
       { path: 'bank', element: <BankPage /> },

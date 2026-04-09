@@ -10,6 +10,7 @@ import { paymentResolvers } from './payments.resolver'
 import { bankTransactionResolvers } from './bankTransactions.resolver'
 import { actionEventResolvers } from './actionEvents.resolver'
 import { emailTemplateResolvers } from './emailTemplates.resolver'
+import { creditNoteResolvers } from './creditNotes.resolver'
 
 export const resolvers = {
   DateTime: DateTimeScalar,
@@ -25,6 +26,7 @@ export const resolvers = {
     ...bankTransactionResolvers.Query,
     ...actionEventResolvers.Query,
     ...emailTemplateResolvers.Query,
+    ...creditNoteResolvers.Query,
   },
 
   Mutation: {
@@ -46,4 +48,5 @@ export const resolvers = {
   BankTransaction: bankTransactionResolvers.BankTransaction,
   ActionEvent: actionEventResolvers.ActionEvent,
   EmailTemplate: emailTemplateResolvers.EmailTemplate,
+  CreditNote: creditNoteResolvers.CreditNote,
 }
